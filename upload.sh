@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /usr/bin/env bash
 
 MY_CONTAINER_ID="b9cd6463e7cf"
 MY_CONTAINER_NAME="priceless_swartz"
