@@ -163,7 +163,6 @@ if __name__ == "__main__":
 
     patched_data = toc.pack_all()
 
-    # patched_data[2336020:2336028] = "asdf"
     new_version = "DOOMHACK"
     patched_data = patched_data[:2336020] + new_version + patched_data[2336020+len(new_version):]
     print(patched_data[2336020:2336028], 0x40247d94)

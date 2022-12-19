@@ -1,19 +1,40 @@
+#include "shannon.h"
+
 #define PRINTBUF 0x40e895e9
 #define PRINTCRLF 0x40e88a49
 
 
 const char TASK_NAME[] = "DOOM\0";
 
+void to_hex(char* in, int len) {
+	void (*printlen)(char *, int) = PRINTBUF;
 
-void our_hook(){
+    for (unsigned int i = 0; i < len; i++) {
+        char b = in[i];
+        char h = (b >> 4) & 0xf;
+        char l = b & 0xf;
+
+        printlen(h >= 10 ? "a" + (h-10) : "0" + h, 1);
+        // printlen(l >= 10 ? 'a' + (l-10) : '0' + l, 1);
+        printlen("5", 1);
+        printlen("9", 1);
+        printlen(" ", 1);
+    }
+    // printlen('\n', 1);
+
+}
+
+void our_hook() {
 	static int beenhere = 0;
 
 	if (beenhere != 2){
-	void (*printlen)(char *, int) = PRINTBUF;
-	void (*printcrlf)(void) = PRINTCRLF;
-	printlen("YOHAY",6);
-	printcrlf();
-	beenhere++;
+		void (*printlen)(char *, int) = PRINTBUF;
+		void (*printcrlf)(void) = PRINTCRLF;
+		printlen("YOHAY1", 7);
+		printcrlf();
+        to_hex("Y", 1);
+		printcrlf();
+		beenhere++;
 	}
 	return 0;
 }
