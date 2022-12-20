@@ -145,7 +145,7 @@ if __name__ == "__main__":
     #main_seg.seg_data = main_seg.seg_data[:0x9C] + p32(inject_addr + 0x18) + main_seg.seg_data[0xA0:] # irq
     off = main_seg.seg_data.find('+LEDTEST\0')
     print(hex(off))
-    main_seg.seg_data = main_seg.seg_data[:off] + '+DOOM\0\0\0\0' + main_seg.seg_data[off+9:]
+    main_seg.seg_data = main_seg.seg_data[:off] + '+DEBUG\0\0\0' + main_seg.seg_data[off+9:]
     # print(main_seg.seg_data[:off])
 
     # find pointer to ledtest function handler

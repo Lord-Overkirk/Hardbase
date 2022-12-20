@@ -26,7 +26,7 @@ fi
 
 make
 
-python2 patch_modem.py "${build_dir}/adjuster.bin" "${modem_dir}/modem.bin" $1
+python2 patch_modem.py "${build_dir}/debugger.bin" "${modem_dir}/modem.bin" $1
 echo $adb
 $adb push $1 /data/local/tmp
 
