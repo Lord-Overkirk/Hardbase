@@ -3,7 +3,7 @@
 MY_CONTAINER_ID="b9cd6463e7cf"
 MY_CONTAINER_NAME="priceless_swartz"
 
-modem_dir='./modem_files'
+modem_dir='./../modem_files'
 build_dir='./src/build'
 
 # Personal automation of different machines.
