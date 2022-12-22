@@ -16,6 +16,19 @@ elif [[ "$STR" == *"$LINUX"* ]]; then
     adb='/home/maurits/platform-tools/adb'
 fi
 
+while getopts 'h' OPTION; do
+  case "$OPTION" in
+    h)
+      echo "Usage: ./upload.sh <output_modem.bin>"
+      exit 0
+      ;;
+    ?)
+      echo "Usage: ./upload.sh <output_modem.bin>"
+      exit 1
+      ;;
+  esac
+done
+
 if [ -z "$1" ]; then
     EXIT_STR=$'Patch name not present.\nExiting...'
     echo "$EXIT_STR"

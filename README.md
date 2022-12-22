@@ -12,5 +12,7 @@ The `injector` directory contains the files that are required for building code 
 
 The `gdbserver` directory contains the files that implement the [gdb remote serial protocol](https://www.embecosm.com/appnotes/ean4/embecosm-howto-rsp-server-ean4-issue-2.html). The compiled binary should be run on the AP of the targeted smartphone. It can be targeted from a remote gdb instance.
 
+`modem_files` contains baseband firmware. Both original (modem.bin) and unoriginal firmware (containing injected code) is present.
+
 ## Usage
 Both directory contain bash scripts that build and push the relevant code to the smartphone via `adb`.
