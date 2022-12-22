@@ -12,15 +12,21 @@ elif [[ "$STR" == *"$LINUX"* ]]; then
     adb='/home/maurits/platform-tools/adb'
 fi
 
-while getopts 'h' OPTION; do
+while getopts 'hbc' OPTION; do
   case "$OPTION" in
     h)
-      echo "Usage: ./upload.sh [options]"
-      echo "Options:"
-      echo "    build           Build the gdbserver binary and adb push to smartphone."
-      echo "    clean           Clean the project"
-      exit 0
-      ;;
+        echo "Usage: ./upload.sh [options]"
+        echo "Options:"
+        echo "    b           Build the gdbserver binary and adb push to smartphone."
+        echo "    c           Clean the project"
+        exit 0
+        ;;
+    b)
+        opt='build'
+        ;;
+    c)
+        opt='clean'
+        ;;
     ?)
       echo "Usage: ./upload.sh <output_modem.bin>"
       exit 1
@@ -28,14 +34,19 @@ while getopts 'h' OPTION; do
   esac
 done
 
+if [ -z "$opt" ]; then
+    echo "For usage try: ./upload.sh -h"
+    exit -1
+fi
+
 BUILD='build'
 CLEAN='clean'
-if [[ "$1" == *"$BUILD"* ]]; then
+if [[ "$opt" == *"$BUILD"* ]]; then
     # Build the executable
     ~/Android/Sdk/ndk/25.1.8937393/ndk-build NDK_APPLICATION_MK=./server/Application.mk
     $adb push libs/armeabi-v7a/gdbserver /data/local/tmp
 
     $adb shell -t "cd /data/local/tmp; sh"
-elif [[ "$1" == *"$CLEAN"* ]]; then
+elif [[ "$opt" == *"$CLEAN"* ]]; then
     ~/Android/Sdk/ndk/25.1.8937393/ndk-build clean NDK_APPLICATION_MK=./server/Application.mk
 fi

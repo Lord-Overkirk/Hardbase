@@ -16,32 +16,36 @@ elif [[ "$STR" == *"$LINUX"* ]]; then
     adb='/home/maurits/platform-tools/adb'
 fi
 
-while getopts 'h' OPTION; do
+while getopts 'hm:' OPTION; do
   case "$OPTION" in
     h)
-      echo "Usage: ./upload.sh <output_modem.bin>"
-      exit 0
-      ;;
+        echo "Usage: ./upload.sh -m <output_modem.bin>"
+        exit 1
+        ;;
+    m)
+        modem_file="$OPTARG"
+        ;;
     ?)
-      echo "Usage: ./upload.sh <output_modem.bin>"
-      exit 1
-      ;;
+        echo "Usage: ./upload.sh -m <output_modem.bin>"
+        exit 1
+        ;;
   esac
 done
 
-if [ -z "$1" ]; then
+if [ -z "$modem_file" ]; then
+    echo "Usage: ./upload.sh -m <output_modem.bin>"
     EXIT_STR=$'Patch name not present.\nExiting...'
     echo "$EXIT_STR"
     exit -1
 else
-    echo $1
+    echo $modem_file
 fi
 
 make
 
-python2 patch_modem.py "${build_dir}/debugger.bin" "${modem_dir}/modem.bin" $1
+python2 patch_modem.py "${build_dir}/debugger.bin" "${modem_dir}/modem.bin" $modem_file
 echo $adb
-$adb push $1 /data/local/tmp
+$adb push $modem_file /data/local/tmp
 
 # Start the modified baseband firmware.
-$adb shell -t "su -c cbd -d -tss310 -bm -mm -P ../../data/local/tmp/$1"
+$adb shell -t "su -c cbd -d -tss310 -bm -mm -P ../../data/local/tmp/$modem_file"
