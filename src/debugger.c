@@ -5,7 +5,9 @@
 #define PRINTCRLF 0x40e88a49
 #define STRLEN 0x40f146a5
 #define SPRINTF 0x40f0c891
+#define TASK_COUNT 0x411a9439
 
+#define TASK_TABLE_COUNT  0x41612cc0
 
 const char TASK_NAME[] = "DEBUG\0";
 
@@ -13,6 +15,13 @@ void (*printlen)(char *, int) = (void*) PRINTBUF;
 size_t (*strlen)(char*) = (void*) STRLEN;
 void (*printcrlf)(void) = (void*) PRINTCRLF;
 int (*sprintf)(char*, char*, ...) = (void*) SPRINTF;
+int (*task_count)(void) = (void*) TASK_COUNT;
+
+static __inline__ void * get_pc(void)  {
+    void *pc;
+    asm("mov %0, pc" : "=r"(pc));
+    return pc;
+}
 
 /* Print len bytes as hexadecimals from specified addr. */
 void print_hex(char* in, int len) {
@@ -52,7 +61,7 @@ void debugger_hook() {
 		char buffer[50];
 		int d = 10, b = 20, c;
 		c = d + b;
-		sprintf(buffer, "Sum of %d and %d is %d", d, b, c);
+		sprintf(buffer, "Sum of %d and %d is %d", d, b, task_count());
 		printlen(buffer, strlen(buffer));
 
 		printcrlf();
@@ -62,6 +71,11 @@ void debugger_hook() {
 		dump_byte_range(0x40669586, 0x4066959f);
 		printcrlf();
 		dump_byte_range(0x4066959f, 0x40669586);
+		printcrlf();
+		// print_hex(get_pc(), 4);
+		char buffer2[50];
+		sprintf(buffer2, "The pc is: %x", get_pc());
+		printlen(buffer2, strlen(buffer2));
 		printcrlf();
 
 		beenhere++;
