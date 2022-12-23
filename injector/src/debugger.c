@@ -8,7 +8,7 @@
 #define SPRINTF 0x40f0c891
 #define TASK_COUNT 0x411a9439
 
-#define TASK_TABLE_COUNT  0x41612cc0
+#define TASK_TABLE_COUNT 0x41612cc0
 
 const char TASK_NAME[] = "DEBUG\0";
 
@@ -27,10 +27,10 @@ void print_hex(char* in, int len) {
         char h = (b >> 4) & 0xf;
         char l = b & 0xf;
 
-		char r1 = (h >= 10 ? 'a' + (h-10) : '0' + h);
+        char r1 = (h >= 10 ? 'a' + (h-10) : '0' + h);
         char r2 = (l >= 10 ? 'a' + (l-10) : '0' + l);
-		char s1[1] = {r1};
-		char s2[1] = {r2};
+        char s1[1] = {r1};
+        char s2[1] = {r2};
 
         printlen(s1, 1);
         printlen(s2, 1);
@@ -40,63 +40,62 @@ void print_hex(char* in, int len) {
 
 /* Dump the bytes as hex in the specified range. */
 void dump_byte_range(unsigned int start, unsigned int end) {
-	if (start > end) {
-		char* err_str = "Error, wrong range\n";
-		printlen(err_str, strlen(err_str));
-		return;
-	}
-	print_hex((char*) start, end-start);
+    if (start > end) {
+        char* err_str = "Error, wrong range\n";
+        printlen(err_str, strlen(err_str));
+        return;
+    }
+    print_hex((char*) start, end-start);
 }
 
 void debugger_hook() {
-	static int beenhere = 0;
+    static int beenhere = 0;
 
-	if (beenhere != 2){
-		char* a = "YOHAY1";
-		size_t y_len = strlen(a);
-		
-		char buffer[50];
-		int d = 10, b = 20, c;
-		c = d + b;
-		sprintf(buffer, "Sum of %d and %d is %d", d, b, task_count());
-		printlen(buffer, strlen(buffer));
+    if (beenhere != 2){
+        char* a = "YOHAY1";
+        size_t y_len = strlen(a);
 
-		printcrlf();
-		print_hex(a, 7);
-		printcrlf();
+        char buffer[50];
+        int d = 10, b = 20, c;
+        c = d + b;
+        sprintf(buffer, "Sum of %d and %d is %d", d, b, task_count());
+        printlen(buffer, strlen(buffer));
 
-		dump_byte_range(0x40669586, 0x4066959f);
-		printcrlf();
-		dump_byte_range(0x4066959f, 0x40669586);
-		printcrlf();
-		// print_hex(get_pc(), 4);
-		char buffer2[50];
-		sprintf(buffer2, "The pc is: %x", get_pc());
-		printlen(buffer2, strlen(buffer2));
+        printcrlf();
+        print_hex(a, 7);
+        printcrlf();
 
-		char buffer3[50];
-		sprintf(buffer3, "The r25 is: %x", get_r3());
-		printlen(buffer3, strlen(buffer3));
-		printcrlf();
+        dump_byte_range(0x40669586, 0x4066959f);
+        printcrlf();
+        dump_byte_range(0x4066959f, 0x40669586);
+        printcrlf();
+        // print_hex(get_pc(), 4);
+        char buffer2[50];
+        sprintf(buffer2, "The pc is: %x", get_pc());
+        printlen(buffer2, strlen(buffer2));
 
-		beenhere++;
-	}
-	return;
+        char buffer3[50];
+        sprintf(buffer3, "The r25 is: %x", get_r3());
+        printlen(buffer3, strlen(buffer3));
+        printcrlf();
+
+        beenhere++;
+    }
+    return;
 }
 
 int task_main() {
-	char * msg = "DEBUGGER CODE GOES HERE";
-	int msg_len = 23;
-	void (*printlen)(char *, int) = (void*) PRINTBUF;
-	void (*printcrlf)(void) = (void*) PRINTCRLF;
+    char * msg = "DEBUGGER CODE GOES HERE";
+    int msg_len = 23;
+    void (*printlen)(char *, int) = (void*) PRINTBUF;
+    void (*printcrlf)(void) = (void*) PRINTCRLF;
 
-	printcrlf();
-	printlen("START", 5);
-	printcrlf();
+    printcrlf();
+    printlen("START", 5);
+    printcrlf();
 
-	printlen(msg, msg_len);
-	printcrlf();
-	debugger_hook();
-	return 0;
-
+    printlen(msg, msg_len);
+    printcrlf();
+    debugger_hook();
+    return 0;
 }
