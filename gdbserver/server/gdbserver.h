@@ -1,0 +1,1 @@
+#define FEATURE_STR "l<target version=\"1.0\"><architecture>arm</architecture></target>"

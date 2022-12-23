@@ -8,18 +8,26 @@
 #include <unistd.h>
 #include <signal.h>
 #include <poll.h>
-
+#include <assert.h>
 
 #include "process.h"
 
 int socket_fd;
 
 struct packet_buf {
-    uint8_t buf[PACKET_BUF_SIZE];
+    char buf[PACKET_BUF_SIZE];
     int end;
 } in, out;
 
-void packet_buf_fill(struct packet_buf* pkt, uint8_t* buffer, size_t len) {
+char* get_in() {
+    return in.buf;
+}
+
+int get_in_end() {
+    return in.end;
+}
+
+void packet_buf_fill(struct packet_buf* pkt, char* buffer, size_t len) {
     if (pkt->end + len >= sizeof(pkt->buf)) {
         printf("Packet buffer overflow\n");
         exit(-2);
@@ -32,6 +40,15 @@ void packet_buf_fill(struct packet_buf* pkt, uint8_t* buffer, size_t len) {
 void packet_buf_clear(struct packet_buf* pkt) {
     memset(pkt, 0, sizeof (struct packet_buf));
     pkt->end = 0;
+}
+
+void pktbuf_erase_head(struct packet_buf *pkt, ssize_t end) {
+    memmove(pkt->buf, pkt->buf + end, pkt->end - end);
+    pkt->end -= end;
+}
+
+void pktbuf_in_erase(ssize_t end) {
+    pktbuf_erase_head(&in, end);
 }
 
 int poll_socket(short events) {
@@ -57,24 +74,92 @@ int poll_outgoing() {
 }
 
 void read_data_once() {
-    uint8_t buffer[POLL_BUFF_SIZE];
+    char buffer[POLL_BUFF_SIZE];
 
-    printf("Before poll\n");
     poll_incoming();
-    printf("After poll\n");
 
     size_t n_read = read(socket_fd, buffer, sizeof (buffer));
     if (n_read < 0) {
         printf("Connection closed");
         exit(0);
     }
-    printf("THe buff %s", buffer);
     packet_buf_fill(&in, buffer, n_read);
 }
 
+void write_data_raw(char* data, size_t len) {
+    packet_buf_fill(&out, data, len);
+}
+
+void write_flush() {
+    size_t write_i = 0;
+
+    while (write_i < (uint32_t) out.end) {
+        size_t bytes_written;
+        poll_outgoing();
+        bytes_written = write(socket_fd, out.buf + write_i, out.end - write_i);
+
+        if (bytes_written < 0) {
+            printf("Error writing bytes: write_flush()\n");
+            exit(-2);
+        }
+        write_i += bytes_written;
+    }
+    packet_buf_clear(&out);
+}
+
+void write_hex(unsigned long hex) {
+    char buf[32];
+    size_t len;
+
+    len = snprintf(buf, sizeof(buf) - 1, "%02lx", hex);
+    write_data_raw(buf, len);
+}
+
+void write_packet_bytes(char* payload, size_t n) {
+    char checksum;
+    size_t i;
+
+    write_data_raw("$", 1);
+    for (i = 0, checksum = 0; i < n; i++) {
+        checksum += payload[i];
+    }
+
+    write_data_raw(payload, n);
+    write_data_raw("#", 1);
+    write_hex(checksum);
+}
+
+void write_packet(char* payload) {
+    write_packet_bytes(payload, strlen(payload));
+}
+
+int skip_start() {
+    ssize_t end = -1;
+    for (size_t i = 0; i < (uint32_t) in.end; i++) {
+        if (in.buf[i] == '$' || in.buf[i] == INTERRUPT_CHAR) {
+            end = i;
+            break;
+        }
+    }
+
+    if (end < 0) {
+        packet_buf_clear(&in);
+        return 0;
+    }
+
+    pktbuf_erase_head(&in, end);
+    assert(1 <= in.end);
+    assert('$' == in.buf[0] || INTERRUPT_CHAR == in.buf[0]);
+    return 1;
+}
+
 void read_packet() {
-    printf("Before read\n");
-    read_data_once();
+    while (!skip_start()) {
+        read_data_once();
+    }
+    // Ack packet
+    write_data_raw("+", 1);
+    write_flush();
 }
 
 int init_socket(const char* port_str) {
@@ -88,8 +173,6 @@ int init_socket(const char* port_str) {
         printf("Port num parse error. Defaulting to :1337\n");
         port = 1337;
     }
-
-    printf("Port num %d\n", htons(port));
 
     int sock_fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
     if (sock_fd < 0) {
@@ -120,10 +203,7 @@ int init_socket(const char* port_str) {
         exit(-1);
     }
 
-
-    printf("Socket created\n");
     socket_fd = accept(sock_fd, NULL, NULL);
-    printf("Socket2 created\n");
     if (socket_fd < 0) {
         perror("Error: accept()");
         exit(-1);

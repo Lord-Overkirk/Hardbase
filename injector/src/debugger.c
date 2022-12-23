@@ -1,4 +1,5 @@
 #include "shannon.h"
+#include "registers.h"
 
 // Address includes THUMB bit
 #define PRINTBUF 0x40e895e9
@@ -17,11 +18,7 @@ void (*printcrlf)(void) = (void*) PRINTCRLF;
 int (*sprintf)(char*, char*, ...) = (void*) SPRINTF;
 int (*task_count)(void) = (void*) TASK_COUNT;
 
-static __inline__ void * get_pc(void)  {
-    void *pc;
-    asm("mov %0, pc" : "=r"(pc));
-    return pc;
-}
+
 
 /* Print len bytes as hexadecimals from specified addr. */
 void print_hex(char* in, int len) {
@@ -76,6 +73,10 @@ void debugger_hook() {
 		char buffer2[50];
 		sprintf(buffer2, "The pc is: %x", get_pc());
 		printlen(buffer2, strlen(buffer2));
+
+		char buffer3[50];
+		sprintf(buffer3, "The r25 is: %x", get_r3());
+		printlen(buffer3, strlen(buffer3));
 		printcrlf();
 
 		beenhere++;
