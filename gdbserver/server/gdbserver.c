@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/ioctl.h>
+#include<fcntl.h>
+#include<errno.h>
 
 #include "gdbserver.h"
 #include "../tools/process.h"
@@ -20,6 +23,27 @@ void process_query_packet(char* payload) {
     }
     name = payload;
     if (!strcmp(name, "Supported")) {
+        int boot_fd = open("/dev/umts_boot0", O_RDWR);
+
+        if (boot_fd == -1) {
+            printf("Error Number % d\n", errno);
+            perror("boot0");
+            exit(-1);
+        }
+
+        printf("modem reset attempt start\n");
+        int io_reply = ioctl(boot_fd, WR_IOCTL, 0x6f27);
+
+        if (io_reply == -1) {
+            printf("Error Number % d\n", errno);
+            perror("ioctl()");
+            exit(-1);
+        }
+        printf("modem reset attempt: %d\n", io_reply);
+        int32_t result;
+        io_reply = ioctl(boot_fd, RD_IOCTL, &result);
+        printf("Final read: %d\n", result);
+
         // write_packet("PacketSize=8000;qXfer:features:read+;qXfer:auxv:read+;qXfer:exec-file:read+;multiprocess+");
         write_packet("PacketSize=8000;qXfer:features:read+");
     }
