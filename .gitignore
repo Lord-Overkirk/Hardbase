@@ -1,2 +1,3 @@
 .vscode
 **/.gdb_history
+__pycache__

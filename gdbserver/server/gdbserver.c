@@ -9,6 +9,7 @@
 
 #include "gdbserver.h"
 #include "../tools/process.h"
+#include "../tools/modem_ioctl.h"
 
 
 char reply_buff[0x20000];
@@ -23,27 +24,6 @@ void process_query_packet(char* payload) {
     }
     name = payload;
     if (!strcmp(name, "Supported")) {
-        int boot_fd = open("/dev/umts_boot0", O_RDWR);
-
-        if (boot_fd == -1) {
-            printf("Error Number % d\n", errno);
-            perror("boot0");
-            exit(-1);
-        }
-
-        printf("modem reset attempt start\n");
-        int io_reply = ioctl(boot_fd, WR_IOCTL, 0x6f27);
-
-        if (io_reply == -1) {
-            printf("Error Number % d\n", errno);
-            perror("ioctl()");
-            exit(-1);
-        }
-        printf("modem reset attempt: %d\n", io_reply);
-        int32_t result;
-        io_reply = ioctl(boot_fd, RD_IOCTL, &result);
-        printf("Final read: %d\n", result);
-
         // write_packet("PacketSize=8000;qXfer:features:read+;qXfer:auxv:read+;qXfer:exec-file:read+;multiprocess+");
         write_packet("PacketSize=8000;qXfer:features:read+");
     }
@@ -139,12 +119,59 @@ void read_command() {
     pktbuf_in_erase(content_end + 3);
 }
 
+void read_ipc(int fd) {
+    u_int32_t buffsize = 65536;
+    char buff[buffsize];
+    memset(buff, 0, buffsize);
+
+    read(fd, buff, buffsize);
+    struct sipc_fmt_hdr* hdr = (struct sipc_fmt_hdr*) buff;
+
+    printf("Buff: %d\n", hdr->len);
+    printf("Buff: %x\n", buff);
+    printf("Buff: %s\n", buff);
+
+    for (int i = 0; i < buffsize; i++) {
+        if (buff[i] != 0)
+            printf("Buffi: %d: %c %x\n", i, buff[i], buff[i]);
+    }
+}
+
 void get_request() {
     for (;;) {
         printf("Reading...\n");
         read_packet();
         read_command();
         write_flush();
+    
+        int boot_fd = open("/dev/umts_boot0", O_RDWR);
+        int ipc_fd = open("/dev/umts_ipc0", O_RDWR);
+
+        if (ipc_fd == -1) {
+            printf("Error Number % d\n", errno);
+            perror("boot0");
+            exit(-1);
+        }
+
+        ioctl(ipc_fd, IOCTL_MODEM_OFF, 0);
+        int res = ioctl(ipc_fd, IOCTL_MODEM_STATUS, 0);
+        switch (res) {
+        case STATE_OFFLINE:
+            printf("Modem offline\n");
+            break;
+        case STATE_BOOTING:
+            printf("Modem booting\n");
+            break;
+        case STATE_ONLINE:
+            printf("Modem online\n");
+            break;
+        default:
+            break;
+        }
+
+        read_ipc(ipc_fd);
+
+        close(ipc_fd);
     }
 }
 

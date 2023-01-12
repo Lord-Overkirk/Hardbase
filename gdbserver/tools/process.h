@@ -1,9 +1,6 @@
 #define PACKET_BUF_SIZE 0x8000
 #define POLL_BUFF_SIZE 0x4096
 
-#define WR_IOCTL _IOW('a', 'a', int32_t*)
-#define RD_IOCTL _IOR('a', 'b', int32_t*)
-
 
 static const char INTERRUPT_CHAR = '\x03';
 
