@@ -144,14 +144,14 @@ if __name__ == "__main__":
     #main_seg.seg_data = main_seg.seg_data[:0x94] + p32(inject_addr + 0x10) + main_seg.seg_data[0x98:] # data abort
     #main_seg.seg_data = main_seg.seg_data[:0x9C] + p32(inject_addr + 0x18) + main_seg.seg_data[0xA0:] # irq
     off = main_seg.seg_data.find('+LEDTEST\0')
-    print(hex(off))
+    print((main_seg.seg_data[off+9]), hex(off))
     main_seg.seg_data = main_seg.seg_data[:off] + '+DEBUG\0\0\0' + main_seg.seg_data[off+9:]
     # print(main_seg.seg_data[:off])
 
     # find pointer to ledtest function handler
     pointer_off = main_seg.seg_data.find(p32(main_seg.m_off + off)) + 12
-    print(hex(pointer_off), hex(pointer_off+main_seg.m_off))
     main_seg.seg_data = main_seg.seg_data[:pointer_off] + p32(inject_addr | 1) + main_seg.seg_data[pointer_off+4:]
+    print(hex(pointer_off), hex(pointer_off+main_seg.m_off), hex(inject_addr | 1), hex(main_seg.m_off + off))
 
 
     ptr = 0x41617a24
