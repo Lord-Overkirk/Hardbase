@@ -4,13 +4,13 @@ import serial
 class ATDebugger:
     def __init__(self):
         try:
-            self.ser = serial.Serial(port="/dev/ttyACM0",
-                                     baudrate=115200,
+            self.ser = serial.Serial(port="/dev/tty.usbmodem1402",
+                                     baudrate=57600,
                                      bytesize=8,
                                      parity=serial.PARITY_NONE,
                                      stopbits=1,
-                                     timeout=None,
-                                     write_timeout=None,
+                                     timeout=1,
+                                     write_timeout=1,
                                      xonxoff=False,
                                      rtscts=False,
                                      dsrdtr=False)
@@ -31,11 +31,20 @@ class ATDebugger:
     def read_command(self):
         if self.ser.inWaiting() > 0:
             raw_data = self.ser.read(self.ser.inWaiting())
+        print(raw_data)
         text = raw_data.decode()
-        print(text)
 
-# at = ATDebugger()
+at = ATDebugger()
 # at.write_command("AT", True)
 # at.read_command()
+# at.write_command("AT", True)
+# at.read_command()
+at.ser.flushInput()
+at.ser.flushOutput()
+# at.ser.write(('\r\n').encode())
 
-# at.ser.close()
+# at.write_command("AT+DEBUG=AAAAAA", True)
+at.write_command("AT", True)
+at.read_command()
+
+at.ser.close()

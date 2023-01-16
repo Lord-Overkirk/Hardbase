@@ -17,6 +17,7 @@ size_t (*strlen)(char*) = (void*) STRLEN;
 void (*printcrlf)(void) = (void*) PRINTCRLF;
 int (*sprintf)(char*, char*, ...) = (void*) SPRINTF;
 int (*task_count)(void) = (void*) TASK_COUNT;
+int (*ch_select)(void) = (void*) 0x40aad8d8;
 
 
 
@@ -84,7 +85,7 @@ void debugger_hook() {
     return;
 }
 
-int task_main() {
+int task_main(char* something) {
     char * msg = "DEBUGGER CODE GOES HERE";
     int msg_len = 23;
     void (*printlen)(char *, int) = (void*) PRINTBUF;
@@ -93,9 +94,13 @@ int task_main() {
     printcrlf();
     printlen("START", 5);
     printcrlf();
+    // printlen(something, 8);
+    ch_select();
+    printlen("STAR2", 5);
+    printcrlf();
 
     printlen(msg, msg_len);
     printcrlf();
-    debugger_hook();
+    // debugger_hook();
     return 0;
 }

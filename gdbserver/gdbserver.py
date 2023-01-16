@@ -10,9 +10,12 @@ ARCH_STR = 'l<target version=\"1.0\"><architecture>arm</architecture></target>'
 
 class GdbServer:
     def __init__(self, port):
-        s = socket.socket(socket.AF_INET,
-                          socket.SOCK_STREAM | socket.SOCK_CLOEXEC,
-                          socket.IPPROTO_TCP)
+        if sys.platform != 'darwin':
+            s = socket.socket(socket.AF_INET,
+                              socket.SOCK_STREAM | socket.SOCK_CLOEXEC,
+                              socket.IPPROTO_TCP)
+        else:
+            s = socket.socket(socket.AF_INET)
 
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(('localhost', int(port)))
