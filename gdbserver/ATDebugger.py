@@ -1,21 +1,22 @@
 import serial
 
+TTY = '/dev/ttyACM0'
 
 class ATDebugger:
     def __init__(self):
         try:
-            self.ser = serial.Serial(port="/dev/tty.usbmodem1402",
+            self.ser = serial.Serial(port=TTY,
                                      baudrate=57600,
                                      bytesize=8,
                                      parity=serial.PARITY_NONE,
-                                     stopbits=1,
-                                     timeout=1,
+                                     stopbits=2,
+                                     timeout=2,
                                      write_timeout=1,
                                      xonxoff=False,
                                      rtscts=False,
                                      dsrdtr=False)
         except serial.SerialException:
-            print("Error: No modem running on port /dev/ttyACM0")
+            print("Error: No modem running on port" + TTY)
             exit()
 
     def write_command(self, command, echo=False):
@@ -31,8 +32,8 @@ class ATDebugger:
     def read_command(self):
         if self.ser.inWaiting() > 0:
             raw_data = self.ser.read(self.ser.inWaiting())
-        print(raw_data)
         text = raw_data.decode()
+        print(text)
 
 at = ATDebugger()
 # at.write_command("AT", True)
@@ -43,8 +44,9 @@ at.ser.flushInput()
 at.ser.flushOutput()
 # at.ser.write(('\r\n').encode())
 
-# at.write_command("AT+DEBUG=AAAAAA", True)
-at.write_command("AT", True)
+# at.write_command("AT", True)
+at.write_command("AT+DEBUG=7", True)
+# at.write_command("ATI", True)
 at.read_command()
 
 at.ser.close()
