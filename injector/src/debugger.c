@@ -8,6 +8,8 @@
 #define SPRINTF 0x40f0c891
 #define TASK_COUNT 0x411a9439
 
+#define ARG 0x43050B09
+
 #define TASK_TABLE_COUNT 0x41612cc0
 
 const char TASK_NAME[] = "DEBUG\0";
@@ -17,8 +19,7 @@ size_t (*strlen)(char*) = (void*) STRLEN;
 void (*printcrlf)(void) = (void*) PRINTCRLF;
 int (*sprintf)(char*, char*, ...) = (void*) SPRINTF;
 int (*task_count)(void) = (void*) TASK_COUNT;
-int (*ch_select2)(void) = (void*) 0x40aad8d9;
-void (*ch_select)(int) = (void*) 0x40b67357;
+int (*ch_select)(void) = (void*) 0x40aad8d9;
 
 
 
@@ -87,110 +88,124 @@ void debugger_hook() {
 }
 
 static inline void print_regs() {
-    char buffer2[50];
-    sprintf(buffer2, "r0: %x", get_sp());
-    printlen(buffer2, strlen(buffer2));
+    char buffer[50];
+    sprintf(buffer, "r0: %x", get_sp());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r1: %x", *(int*)get_r1());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r1: %x", *(int*)get_r1());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r2: %x", *(int*)get_r2());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r2: %x", *(int*)get_r2());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r3: %x", *(int*)get_r3());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r3: %x", *(int*)get_r3());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r4: %x", *(int*)get_r4());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r4: %x", *(int*)get_r4());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r5: %x", *(int*)get_r5());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r5: %x", *(int*)get_r5());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r6: %x", *(int*)get_r6());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r6: %x", *(int*)get_r6());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r7: %x", *(int*)get_r7());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r7: %x", *(int*)get_r7());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r8: %x", get_r8());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r8: %x", get_r8());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r9: %x", *(int*)get_r9());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r9: %x", *(int*)get_r9());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r10: %x", get_r10());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r10: %x", get_r10());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r11: %x", *(int*)get_r11());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r11: %x", *(int*)get_r11());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r12: %x", get_r12());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r12: %x", get_r12());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r13: %x", *(int*)get_r13());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r13: %x", *(int*)get_r13());
+    printlen(buffer, strlen(buffer));
     printcrlf();
-    sprintf(buffer2, "r14: %x", *(int*)get_r14());
-    printlen(buffer2, strlen(buffer2));
+    sprintf(buffer, "r14: %x", *(int*)get_r14());
+    printlen(buffer, strlen(buffer));
     printcrlf();
+}
+
+void wrap_regs() {
+    print_regs();
 }
 
 static inline void print_stack() {
     void* sp = get_sp();
     char buffer[50];
 
-    size_t offset = 0;
-    for (int i = -10; i < 10; i++) {
-        offset = i * 4;
-        sprintf(buffer, "sp %x[+%d]: ", sp+offset, offset);
+    int sp_min = -10*10;
+    int sp_max = 10*10;
+
+    int offset = 0;
+    for (int i = sp_min; i < sp_max; i+=1) {
+        offset = i;
+        if (i == 0) {
+            sprintf(buffer, "sp %x: with mem %X <--", sp+offset, *(int*)(sp+offset));
+        } else {
+            sprintf(buffer, "sp %x: with mem %X ", sp+offset, *(int*)(sp+offset));
+        }
         printlen(buffer, strlen(buffer));
-        print_hex(sp+offset, 4);
+        // print_hex(sp+offset, 4);
+        printcrlf();
+    }
+}
+
+static inline void print_stack2() {
+    void* sp = get_sp();
+    char buffer[50];
+
+    int sp_min = -10*100;
+    int sp_max = -10*50;
+
+    int offset = 0;
+    for (int i = sp_min; i < sp_max; i+=1) {
+        offset = i;
+        if (i == 0) {
+            sprintf(buffer, "sp %x: with mem %c <--", sp+offset, *(char*)(sp+offset));
+        } else {
+            sprintf(buffer, "sp %x: with mem %c ", sp+offset, *(char*)(sp+offset));
+        }
+        printlen(buffer, strlen(buffer));
+        // print_hex(sp+offset, 4);
         printcrlf();
     }
 }
 
 int task_main() {
+    // ch_select2();
+    // printcrlf();
     // print_stack();
-
-    // char * msg = "DEBUGGER CODE GOES HERE";
-    // int msg_len = 23;
-    // void (*printlen)(char *, int) = (void*) PRINTBUF;
-    // void (*printcrlf)(void) = (void*) PRINTCRLF;
-
-    // printcrlf();
-    // printlen("START", 5);
-
-    // sprintf(buffer2, "r1 is: %x", *(int*)get_r1());
-    // printlen(buffer2, strlen(buffer2));
-    // printcrlf();
-
-    // sprintf(buffer2, "r2 is: %x", *(int*)get_r2());
-    // printlen(buffer2, strlen(buffer2));;
-    // printcrlf();
-
-    // sprintf(buffer2, "r3 is: %x", *(int*)get_r3());
-    // printlen(buffer2, strlen(buffer2));;
-    // printcrlf();
-
-    // sprintf(buffer2, "sp is: %x", *(int*)get_r13());
-    // printlen(buffer2, strlen(buffer2));;
-    // printcrlf();
-
-    // // print_hex(0x41948f40, 4);
-    // // print_hex(&something, 4);
-    // // int one = 1;
-    print_hex(0x41956ae0, 4);
+    // void* sp = 0x43050b70 - 0x7c + 0x40;
+    // print_hex(sp, 4);
+    // print_stack();
+    // sp = 0x43050b70 - 0x7c + 0x40;
+    // print_hex(sp, 4);
     printcrlf();
-    print_hex(*(char*)0x41956ae0, 4);
+    printlen("START HIER", 11);
     printcrlf();
-    ch_select2();
-    // // ch_select(3);
-    // // ch_select2();
-    // // printlen("STAR2", 5);
-    // printcrlf();
+    // print_stack2();
+    ch_select();
+    uint32_t mem = *(uint32_t*)(uint32_t)*(uint32_t*)0x40aad9c4;
+    uint32_t* mem2 = (uint32_t*)(mem + 0x1b8);
+    char buff[40];
+    sprintf(buff, "het is :%x", mem2);
+    printlen(buff, strlen(buff));
+    printcrlf();
+    char* str = (char*)(mem2);
+    // print_hex(*(int*)str, 4);
+    printlen(*(int*)str, strlen(*(int*)str));
 
-    // printlen(msg, msg_len);
-    // printcrlf();
-    // debugger_hook();
+    // wrap_regs();
     return 0;
 }
