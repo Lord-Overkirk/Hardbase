@@ -1,5 +1,4 @@
 #include <common.h>
-#include "string.h"
 
 // typedef struct debug_command {
 //     uint32_t length;

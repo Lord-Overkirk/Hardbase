@@ -53,7 +53,7 @@ COMMON_DEP := $(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.c=.d))
 #######################################
 
 # MODS := gsm_mm gsm_sm gsm_cc lte_rrc glink mymod adjuster
-MODS := debugger debug_command
+MODS := debugger
 # gsm_mm_SRC := fuzzers/gsm_mm.c afl.c
 # gsm_cc_SRC := fuzzers/gsm_cc.c afl.c
 # gsm_sm_SRC := fuzzers/gsm_sm.c afl.c
@@ -62,7 +62,6 @@ MODS := debugger debug_command
 
 # mymod_SRC := mymod.c
 debugger_SRC := debugger.c
-debug_command_SRC := debug_command.c
 
 
 #######################################
