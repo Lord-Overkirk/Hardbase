@@ -1,11 +1,9 @@
 #include "shannon.h"
 #include "registers.h"
+#include "assert.h"
+#include "debug_command.h"
+#include "string.h"
 
-// Address includes THUMB bit
-#define PRINTBUF 0x40e895e9
-#define PRINTCRLF 0x40e88a49
-#define STRLEN 0x40f146a5
-#define SPRINTF 0x40f0c891
 #define TASK_COUNT 0x411a9439
 
 #define ARG 0x43050B09
@@ -14,10 +12,7 @@
 
 const char TASK_NAME[] = "DEBUG\0";
 
-void (*printlen)(char *, int) = (void*) PRINTBUF;
-size_t (*strlen)(char*) = (void*) STRLEN;
-void (*printcrlf)(void) = (void*) PRINTCRLF;
-int (*sprintf)(char*, char*, ...) = (void*) SPRINTF;
+
 int (*task_count)(void) = (void*) TASK_COUNT;
 int (*ch_select)(void) = (void*) 0x40aad8d9;
 
@@ -48,6 +43,7 @@ void dump_byte_range(unsigned int start, unsigned int end) {
         printlen(err_str, strlen(err_str));
         return;
     }
+    // ASSERT(start > end);
     print_hex((char*) start, end-start);
 }
 
@@ -183,29 +179,14 @@ static inline void print_stack2() {
 }
 
 int task_main() {
-    // ch_select2();
-    // printcrlf();
-    // print_stack();
-    // void* sp = 0x43050b70 - 0x7c + 0x40;
-    // print_hex(sp, 4);
-    // print_stack();
-    // sp = 0x43050b70 - 0x7c + 0x40;
-    // print_hex(sp, 4);
     printcrlf();
     printlen("START HIER", 11);
     printcrlf();
-    // print_stack2();
-    ch_select();
-    uint32_t mem = *(uint32_t*)(uint32_t)*(uint32_t*)0x40aad9c4;
-    uint32_t* mem2 = (uint32_t*)(mem + 0x1b8);
-    char buff[40];
-    sprintf(buff, "het is :%x", mem2);
-    printlen(buff, strlen(buff));
-    printcrlf();
-    char* str = (char*)(mem2);
-    // print_hex(*(int*)str, 4);
-    printlen(*(int*)str, strlen(*(int*)str));
 
-    // wrap_regs();
+    char* command = get_command();
+    printlen(command, strlen(command));
+    printcrlf();
+    print_hex(command, strlen(command));
+
     return 0;
 }

@@ -21,9 +21,9 @@ class GdbServer:
         s.bind(('localhost', int(port)))
         s.listen(1)
         (self.sock, _) = s.accept()
+        self.at = ATDebugger()
         while True:
             self.receive()
-        self.at = ATDebugger()
 
     def skip_start(self, cmd):
         for i, byte in enumerate(cmd):

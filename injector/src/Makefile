@@ -46,14 +46,14 @@ LDFLAGS=-Wl,-T$(LINKER_SCRIPT) \
 	-Wl,--gc-sections \
 	$(CFLAGS)
 
-COMMON_SRC := shannon.c common.c modkit.c task.c
+COMMON_SRC := shannon.c common.c modkit.c task.c debug_command.c
 COMMON_OBJ := $(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.c=.o))
 COMMON_DEP := $(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.c=.d))
 
 #######################################
 
 # MODS := gsm_mm gsm_sm gsm_cc lte_rrc glink mymod adjuster
-MODS := debugger
+MODS := debugger debug_command
 # gsm_mm_SRC := fuzzers/gsm_mm.c afl.c
 # gsm_cc_SRC := fuzzers/gsm_cc.c afl.c
 # gsm_sm_SRC := fuzzers/gsm_sm.c afl.c
@@ -62,6 +62,7 @@ MODS := debugger
 
 # mymod_SRC := mymod.c
 debugger_SRC := debugger.c
+debug_command_SRC := debug_command.c
 
 
 #######################################

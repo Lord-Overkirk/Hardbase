@@ -1,4 +1,5 @@
 import serial, time
+import DebugCommand
 
 TTY = '/dev/ttyACM0'
 
@@ -9,9 +10,9 @@ class ATDebugger:
                                      baudrate=115200,
                                      bytesize=8,
                                      parity=serial.PARITY_NONE,
-                                     stopbits=2,
-                                     timeout=3,
-                                     write_timeout=3,
+                                     stopbits=1,
+                                     timeout=0.2,
+                                     write_timeout=0.1,
                                      xonxoff=False,
                                      rtscts=False,
                                      dsrdtr=False)
@@ -20,11 +21,18 @@ class ATDebugger:
             exit()
 
     def write_command(self, command, echo=False):
+        start_command = "AT+DEBUG="
         if echo:
-            print("> {0}".format(command))
-        for letter in command:
+            print("> {0}".format(start_command))
+        for letter in start_command:
             self.ser.write(letter.encode())
             self.ser.read(1)
+
+        print(command)
+        for byte in command:
+            print(byte.to_bytes(1, 'big'), type(command))
+            self.ser.write(byte.to_bytes(1, 'big'))
+            print(self.ser.read(1))
 
         self.ser.write(('\r\n').encode())
         self.ser.read(2)
@@ -33,6 +41,7 @@ class ATDebugger:
         raw_data = b''
         # while raw_data[-2:] != b'\r\n':
         while self.ser.inWaiting() > 0:
+            print(raw_data)
             raw_data += self.ser.read(self.ser.inWaiting())
         try:
             text = raw_data.decode()
@@ -50,19 +59,15 @@ class ATDebugger:
         # print(text)
 
 at = ATDebugger()
-# at.write_command("AT", True)
-# at.read_command()
-# at.write_command("AT", True)
-# at.read_command()
 at.ser.flushInput()
 at.ser.flushOutput()
-# at.ser.write(('\r\n').encode())
 
-# at.write_command("AT", True)
-# at.write_command("AT+DEBUG=111", True)
-at.write_command("AT+DEBUG=2,FULL", True)
-# at.write_command("AT+CHNSELCT=2,FULL", True)
-# at.write_command("ATI", True)
+a = DebugCommand.DebugCommand(DebugCommand.REGISTERS)
+b = a.send()
+print(b)
+at.write_command(b, True)
 at.read_command()
 
 at.ser.close()
+
+# https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
