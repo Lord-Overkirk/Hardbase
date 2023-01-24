@@ -1,8 +1,8 @@
 #include "shannon.h"
 #include "registers.h"
 #include "assert.h"
-#include "debug_command.h"
 #include "string.h"
+#include "debug_command.h"
 
 #define TASK_COUNT 0x411a9439
 

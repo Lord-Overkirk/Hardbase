@@ -1,4 +1,5 @@
 #include <common.h>
+#include "string.h"
 
 // typedef struct debug_command {
 //     uint32_t length;
@@ -7,17 +8,16 @@
 //     uint32_t memory_end;
 // };
 
-// void parse_command(char* input) {
-//     uint32_t size = 0;
-//     char* command;
+void parse_command(char* input) {
+    uint32_t size = strlen(input);
+    char* command;
 
-//     size = get_command_size(input);
-//     for (int i = 0; i < size; i++) {
-//         if (input[i] == '=') {
+    for (int i = 0; i < size; i++) {
+        if (input[i] == '=') {
 
-//         }
-//     }
-// }
+        }
+    }
+}
 
 
 
