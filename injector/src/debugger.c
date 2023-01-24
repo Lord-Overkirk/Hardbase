@@ -1,21 +1,16 @@
+#include "str.h"
 #include "shannon.h"
 #include "registers.h"
 #include "assert.h"
-#include "string.h"
 #include "debug_command.h"
+#include <common.h>
 
-#define TASK_COUNT 0x411a9439
+int (*sprintf)(char*, char*, ...) = (void*) 0x40f0c891;
 
-#define ARG 0x43050B09
-
-#define TASK_TABLE_COUNT 0x41612cc0
 
 const char TASK_NAME[] = "DEBUG\0";
 
-
-int (*task_count)(void) = (void*) TASK_COUNT;
 int (*ch_select)(void) = (void*) 0x40aad8d9;
-
 
 
 /* Print len bytes as hexadecimals from specified addr. */
@@ -47,89 +42,76 @@ void dump_byte_range(unsigned int start, unsigned int end) {
     print_hex((char*) start, end-start);
 }
 
-void debugger_hook() {
-    static int beenhere = 0;
+// void debugger_hook() {
+//     static int beenhere = 0;
 
-    if (beenhere != 2){
-        char* a = "YOHAY1";
-        size_t y_len = strlen(a);
+//     if (beenhere != 2){
+//         char* a = "YOHAY1";
+//         size_t y_len = strlen(a);
 
-        char buffer[50];
-        int d = 10, b = 20, c;
-        c = d + b;
-        sprintf(buffer, "Sum of %d and %d is %d", d, b, task_count());
-        printlen(buffer, strlen(buffer));
+//         char buffer[50];
+//         int d = 10, b = 20, c;
+//         c = d + b;
+//         sprintf(buffer, "Sum of %d and %d is %d", d, b, task_count());
+//         printlen(buffer, strlen(buffer));
 
-        printcrlf();
-        print_hex(a, 7);
-        printcrlf();
+//         printcrlf();
+//         print_hex(a, 7);
+//         printcrlf();
 
-        dump_byte_range(0x40669586, 0x4066959f);
-        printcrlf();
-        dump_byte_range(0x4066959f, 0x40669586);
-        printcrlf();
-        // print_hex(get_pc(), 4);
-        char buffer2[50];
-        sprintf(buffer2, "The pc is: %x", get_pc());
-        printlen(buffer2, strlen(buffer2));
+//         dump_byte_range(0x40669586, 0x4066959f);
+//         printcrlf();
+//         dump_byte_range(0x4066959f, 0x40669586);
+//         printcrlf();
+//         // print_hex(get_pc(), 4);
+//         char buffer2[50];
+//         sprintf(buffer2, "The pc is: %x", get_pc());
+//         printlen(buffer2, strlen(buffer2));
 
-        char buffer3[50];
-        sprintf(buffer3, "The r25 is: %x", get_r3());
-        printlen(buffer3, strlen(buffer3));
-        printcrlf();
+//         char buffer3[50];
+//         sprintf(buffer3, "The r25 is: %x", get_r3());
+//         printlen(buffer3, strlen(buffer3));
+//         printcrlf();
 
-        beenhere++;
-    }
-    return;
-}
+//         beenhere++;
+//     }
+//     return;
+// }
 
 static inline void print_regs() {
     char buffer[50];
-    sprintf(buffer, "r0: %x", get_sp());
+    sprintf(buffer, "r0: 0x%08x\n", get_r0());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r1: %x", *(int*)get_r1());
+    sprintf(buffer, "r1: 0x%08x\n", get_r1());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r2: %x", *(int*)get_r2());
+    sprintf(buffer, "r2: 0x%08x\n", get_r2());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r3: %x", *(int*)get_r3());
+    sprintf(buffer, "r3: 0x%08x\n", get_r3());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r4: %x", *(int*)get_r4());
+    sprintf(buffer, "r4: 0x%08x\n", get_r4());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r5: %x", *(int*)get_r5());
+    sprintf(buffer, "r5: 0x%08x\n", get_r5());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r6: %x", *(int*)get_r6());
+    sprintf(buffer, "r6: 0x%08x\n", get_r6());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r7: %x", *(int*)get_r7());
+    sprintf(buffer, "r7: 0x%08x\n", get_r7());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r8: %x", get_r8());
+    sprintf(buffer, "r8: 0x%08x\n", get_r8());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r9: %x", *(int*)get_r9());
+    sprintf(buffer, "r9: 0x%08x\n", get_r9());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r10: %x", get_r10());
+    sprintf(buffer, "r10: 0x%08x\n", get_r10());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r11: %x", *(int*)get_r11());
+    sprintf(buffer, "r11: 0x%08x\n", get_r11());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r12: %x", get_r12());
+    sprintf(buffer, "r12: 0x%08x\n", get_r12());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r13: %x", *(int*)get_r13());
+    sprintf(buffer, "r13: 0x%08x\n", get_r13());
     printlen(buffer, strlen(buffer));
-    printcrlf();
-    sprintf(buffer, "r14: %x", *(int*)get_r14());
+    sprintf(buffer, "r14: 0x%08x\n", get_r14());
     printlen(buffer, strlen(buffer));
-    printcrlf();
+    sprintf(buffer, "pc: 0x%08x\n", get_pc());
+    printlen(buffer, strlen(buffer));
 }
 
 void wrap_regs() {
@@ -152,7 +134,6 @@ static inline void print_stack() {
             sprintf(buffer, "sp %x: with mem %X ", sp+offset, *(int*)(sp+offset));
         }
         printlen(buffer, strlen(buffer));
-        // print_hex(sp+offset, 4);
         printcrlf();
     }
 }
@@ -173,20 +154,19 @@ static inline void print_stack2() {
             sprintf(buffer, "sp %x: with mem %c ", sp+offset, *(char*)(sp+offset));
         }
         printlen(buffer, strlen(buffer));
-        // print_hex(sp+offset, 4);
         printcrlf();
     }
 }
 
 int task_main() {
     printcrlf();
-    printlen("START HIER", 11);
-    printcrlf();
 
     char* command = get_command();
-    printlen(command, strlen(command));
-    printcrlf();
-    print_hex(command, strlen(command));
 
+    printcrlf();
+    debug_command dc = parse_command(command);
+    if (!strcmp(dc.command_type, "REG")) {
+        print_regs();
+    }
     return 0;
 }

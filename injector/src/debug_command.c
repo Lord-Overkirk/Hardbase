@@ -1,22 +1,30 @@
-#include <common.h>
-#include "string.h"
+#include "debug_command.h"
+#include "str.h"
 
-// typedef struct debug_command {
-//     uint32_t length;
-//     uint32_t command_type;
-//     uint32_t memory_start;
-//     uint32_t memory_end;
-// };
 
-void parse_command(char* input) {
+debug_command parse_command(char* input) {
     uint32_t size = strlen(input);
     char* command;
 
-    for (int i = 0; i < size; i++) {
+    for (uint32_t i = 0; i < size; i++) {
         if (input[i] == '=') {
-
+            command = (char*)input + i;
         }
     }
+
+    debug_command d;
+    d.length[2] = '\0';
+    d.command_type[3] = '\0';
+
+    // Parse into the struct.
+    for (uint32_t i = 0; i < strlen(command); i++) {
+        if (command[i] >= '9') {
+            d.command_type[i-3] = (char)command[i];
+        } else {
+            d.length[i-1] = (char)command[i];
+        }
+    }
+    return d;
 }
 
 

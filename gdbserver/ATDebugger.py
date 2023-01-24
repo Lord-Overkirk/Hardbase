@@ -28,11 +28,9 @@ class ATDebugger:
             self.ser.write(letter.encode())
             self.ser.read(1)
 
-        print(command)
         for byte in command:
-            print(byte.to_bytes(1, 'big'), type(command))
             self.ser.write(byte.to_bytes(1, 'big'))
-            print(self.ser.read(1))
+            self.ser.read(1)
 
         self.ser.write(('\r\n').encode())
         self.ser.read(2)
@@ -41,22 +39,10 @@ class ATDebugger:
         raw_data = b''
         # while raw_data[-2:] != b'\r\n':
         while self.ser.inWaiting() > 0:
-            print(raw_data)
             raw_data += self.ser.read(self.ser.inWaiting())
-        try:
-            text = raw_data.decode()
-        except:
-            pass
+            # print(raw_data)
+        text = raw_data.decode()
         print(text)
-        # if self.ser.inWaiting() > 0:
-        #     raw_data = self.ser.read(self.ser.inWaiting())
-        # text = raw_data.decode()
-        # print(text)
-        # print("Wait", self.ser.inWaiting())
-        # if self.ser.inWaiting() > 0:
-        #     raw_data = self.ser.read(self.ser.inWaiting())
-        # text = raw_data.decode()
-        # print(text)
 
 at = ATDebugger()
 at.ser.flushInput()
@@ -64,7 +50,7 @@ at.ser.flushOutput()
 
 a = DebugCommand.DebugCommand(DebugCommand.REGISTERS)
 b = a.send()
-print(b)
+# print(b)
 at.write_command(b, True)
 at.read_command()
 
