@@ -107,9 +107,10 @@ static __inline__ void * get_r25(void) {
 }
 
 static __inline__ void * get_cspr(void) {
-    void *pc;
-    asm("mov %0, cspr" : "=r"(pc));
-    return pc;
+    void *reg;
+    // asm("mov %0, cspr" : "=r"(reg));
+    asm volatile (" mrs %0, cpsr" : "=r" (reg) :  );
+    return reg;
 }
 
 static __inline__ void * get_sp(void) {

@@ -112,6 +112,8 @@ static inline void print_regs() {
     printlen(buffer, strlen(buffer));
     sprintf(buffer, "pc: 0x%08x\n", get_pc());
     printlen(buffer, strlen(buffer));
+    sprintf(buffer, "cspr: 0x%08x\n", get_cspr());
+    printlen(buffer, strlen(buffer));
 }
 
 void wrap_regs() {

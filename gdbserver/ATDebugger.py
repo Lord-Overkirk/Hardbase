@@ -42,18 +42,30 @@ class ATDebugger:
             raw_data += self.ser.read(self.ser.inWaiting())
             # print(raw_data)
         text = raw_data.decode()
-        print(text)
+        # print(text)
+        return text
 
-at = ATDebugger()
-at.ser.flushInput()
-at.ser.flushOutput()
+    def get_registers(self):
+        cmd = DebugCommand.DebugCommand(DebugCommand.REGISTERS)
+        b = cmd.send()
+        self.write_command(b, False)
+        raw_response = self.read_command()
+        raw_regs = raw_response.strip().split('\r\n')[0]
+        regs_list = raw_regs.splitlines()
+        register_values = [reg.split(' ')[1].removeprefix('0x') for reg in regs_list]
+        return ''.join(register_values)
 
-a = DebugCommand.DebugCommand(DebugCommand.REGISTERS)
-b = a.send()
-# print(b)
-at.write_command(b, True)
-at.read_command()
 
-at.ser.close()
+# at = ATDebugger()
+# at.ser.flushInput()
+# at.ser.flushOutput()
+
+# a = DebugCommand.DebugCommand(DebugCommand.REGISTERS)
+# b = a.send()
+# # print(b)
+# at.write_command(b, True)
+# at.read_command()
+
+# at.ser.close()
 
 # https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf

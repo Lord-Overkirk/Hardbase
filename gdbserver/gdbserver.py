@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 import socket
-import ATDebugger
+from ATDebugger import ATDebugger
 
 INTERRUPT_CHAR = '\x03'
 ARCH_STR = 'l<target version=\"1.0\"><architecture>arm</architecture></target>'
@@ -88,11 +88,17 @@ class GdbServer:
                 self.write_packet('S00')
             case 'g':
                 # Registers
+                registers = self.at.get_registers()
+                rs = registers[:-8]
+                csrp = registers[-8:]
+
                 fake_regs = "xxxxxxxx00000001xxxxxxxx00000002"\
                             "xxxxxxxx00000003xxxxxxxx00000004"\
                             "xxxxxxxx00000005xxxxxxxx00000006"\
                             "xxxxxxxx00000007xxxxxxxx00000008"
-                self.write_packet(fake_regs)
+                print(rs, csrp)
+                print(fake_regs)
+                self.write_packet(rs)
             case 'm':
                 addr, size = payload_raw.split(',')
                 addr = int(addr, 16)
@@ -101,14 +107,18 @@ class GdbServer:
                 fake_mem = 0xdeadbeef
                 self.write_packet(str(fake_mem))
             case 'p':
+                print("hier")
+                registers = self.at.get_registers()
+                rs = registers[:-8]
+                csrp = registers[-8:]
                 if (int(payload_raw) > 15):
-                    self.write_packet('xxxxxxxx')
+                    self.write_packet(csrp)
             case _:
                 print("Should handle case {0}".format(cmd_type))
 
     def receive(self):
         raw_data = self.sock.recv(2048)
-        print(raw_data)
+        # print(raw_data)
         if raw_data == b'':
             raise RuntimeError("Connection broken")
         skipped = self.skip_start(raw_data)
