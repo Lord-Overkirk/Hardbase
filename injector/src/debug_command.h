@@ -5,8 +5,8 @@
 #include "str.h"
 
 typedef struct debug_command {
-    char length[2];
-    char command_type[3];
+    int argc;
+    char* command_type;
     uint32_t memory_start;
     uint32_t memory_end;
 } debug_command;
@@ -14,9 +14,10 @@ typedef struct debug_command {
 debug_command parse_command(char*);
 char* get_command(void);
 
-enum command_type {
-    memory = 0,
-    registers = 1
+enum debug_command_field {
+    type = 1,
+    start_addr = 2,
+    end_addr = 3
 };
 
 #endif

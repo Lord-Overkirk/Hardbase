@@ -7,7 +7,6 @@ REGISTERS = "REG".encode()
 
 @dataclass
 class DebugCommand:
-    length: c_uint32
     command_type: str
     memory_start: c_uint32
     memory_end: c_uint32
@@ -19,8 +18,7 @@ class DebugCommand:
 
     def send(self):
         # Unfortunately we need to pass ascii chars, otherwise the baseband does throw away the non ascii bytes.
-        send_format = "2s3sII"
-        self.length = str(struct.calcsize(send_format)).encode()
+        send_format = "3sII"
 
-        bytes_to_send = struct.pack(send_format, self.length, self.command_type, self.memory_start, self.memory_end)
+        bytes_to_send = struct.pack(send_format, self.command_type, self.memory_start, self.memory_end)
         return bytes_to_send

@@ -46,7 +46,8 @@ LDFLAGS=-Wl,-T$(LINKER_SCRIPT) \
 	-Wl,--gc-sections \
 	$(CFLAGS)
 
-COMMON_SRC := shannon.c common.c modkit.c task.c debug_command.c str.c
+COMMON_SRC := shannon.c common.c modkit.c task.c \
+			  debug_command.c assert.c
 COMMON_OBJ := $(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.c=.o))
 COMMON_DEP := $(addprefix $(BUILD_DIR)/, $(COMMON_SRC:.c=.d))
 

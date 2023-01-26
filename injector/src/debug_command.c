@@ -1,28 +1,49 @@
 #include "debug_command.h"
 #include "str.h"
+#include "assert.h"
+#include "stdlib.h"
 
 
+void print_debug_command(debug_command d) {
+    char b[100];
+    sprintf(b, "type: %s\r\nstart: %d\r\nend: %d\r\n", d.command_type, d.memory_start, d.memory_end);
+    printlen(b, strlen(b));
+}
+
+/**
+ * @brief Parse the passed command into a defined struct.
+ * 
+ * @param input the raw command from the AT modem serial
+ * @return debug_command, the parsed command.
+ */
 debug_command parse_command(char* input) {
-    uint32_t size = strlen(input);
-    char* command;
-
-    for (uint32_t i = 0; i < size; i++) {
-        if (input[i] == '=') {
-            command = (char*)input + i;
-        }
+    /* Find start of command. */
+    char* command = strtok(input, "=");
+    char* res = "";
+    while (strcmp(command, "#")) {
+        res = command;
+        command = strtok(NULL, "=");
     }
 
     debug_command d;
-    d.length[2] = '\0';
-    d.command_type[3] = '\0';
-
-    // Parse into the struct.
-    for (uint32_t i = 0; i < strlen(command); i++) {
-        if (command[i] >= '9') {
-            d.command_type[i-3] = (char)command[i];
-        } else {
-            d.length[i-1] = (char)command[i];
+    d.argc = 0;
+    char* token = strtok(res, "|");
+    while (strcmp(token, "#")) {
+        d.argc++;
+        switch (d.argc) {
+        case type:
+            d.command_type = token;
+            break;
+        case start_addr:
+            d.memory_start = strtol(token, NULL, 16);
+            break;
+        case end_addr:
+            d.memory_end = strtol(token, NULL, 16);
+            break;
+        default:
+            break;
         }
+        token = strtok(NULL, "|");
     }
     return d;
 }

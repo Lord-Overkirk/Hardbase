@@ -1,17 +1,19 @@
 #ifndef _STRING_H
 #define _STRING_H
 
+#define PRINTBUF 0x40e895e9
+#define PRINTCRLF 0x40e88a49
+#define STRLEN 0x40f146a5
+#define SPRINTF 0x40f0c891
+#define STRTOK 0x40f7c62d
+#define STRTOL 0x40a9794d
 
-// extern void (*printlen)(char*, int);
-// extern unsigned int (*strlen)(char*);
-// void (*printcrlf)(void) = (void*) 0x40e88a49;
-// extern int (*sprintf)(char*, char*, ...);
-// extern void pr();
+#define printlen ((void (*)(char*, int))PRINTBUF)
+#define strlen ((unsigned int (*)(char*))STRLEN)
+#define printcrlf ((void (*)(void))PRINTCRLF)
+#define sprintf ((int (*)(char*, char*, ...))SPRINTF)
+#define strtok ((char* (*)(char*, const char*))STRTOK)
+#define strtol ((long (*)(char*, char**, int))STRTOL)
 
-extern void printlen(char*, int);
-extern unsigned int strlen(char*);
-// int sprintf(char* a, char* b, ...);
-// int (*sprintf)(char*, char*, ...) ;
-extern void printcrlf(void);
 
 #endif // _STRING_H

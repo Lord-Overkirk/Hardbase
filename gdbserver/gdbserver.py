@@ -91,13 +91,6 @@ class GdbServer:
                 registers = self.at.get_registers()
                 rs = registers[:-8]
                 csrp = registers[-8:]
-
-                fake_regs = "xxxxxxxx00000001xxxxxxxx00000002"\
-                            "xxxxxxxx00000003xxxxxxxx00000004"\
-                            "xxxxxxxx00000005xxxxxxxx00000006"\
-                            "xxxxxxxx00000007xxxxxxxx00000008"
-                print(rs, csrp)
-                print(fake_regs)
                 self.write_packet(rs)
             case 'm':
                 addr, size = payload_raw.split(',')
@@ -107,7 +100,6 @@ class GdbServer:
                 fake_mem = 0xdeadbeef
                 self.write_packet(str(fake_mem))
             case 'p':
-                print("hier")
                 registers = self.at.get_registers()
                 rs = registers[:-8]
                 csrp = registers[-8:]
@@ -118,7 +110,6 @@ class GdbServer:
 
     def receive(self):
         raw_data = self.sock.recv(2048)
-        # print(raw_data)
         if raw_data == b'':
             raise RuntimeError("Connection broken")
         skipped = self.skip_start(raw_data)

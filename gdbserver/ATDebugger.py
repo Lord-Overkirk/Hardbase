@@ -1,5 +1,6 @@
 import serial, time
 import DebugCommand
+import socket
 
 TTY = '/dev/ttyACM0'
 
@@ -50,10 +51,11 @@ class ATDebugger:
         b = cmd.send()
         self.write_command(b, False)
         raw_response = self.read_command()
-        raw_regs = raw_response.strip().split('\r\n')[0]
-        regs_list = raw_regs.splitlines()
-        register_values = [reg.split(' ')[1].removeprefix('0x') for reg in regs_list]
-        return ''.join(register_values)
+        raw_regs = raw_response.strip().split('\r\n')[:-2]
+        register_values = [reg.split(' ')[1].removeprefix('0x') for reg in raw_regs]
+        r = [socket.htonl(int(reg, 16)) for reg in register_values]
+        regs = ['{:08x}'.format(reg) for reg in r]
+        return ''.join(regs)
 
 
 # at = ATDebugger()
