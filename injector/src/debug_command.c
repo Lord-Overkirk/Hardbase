@@ -6,7 +6,7 @@
 
 void print_debug_command(debug_command d) {
     char b[100];
-    sprintf(b, "type: %s\r\nstart: %d\r\nend: %d\r\n", d.command_type, d.memory_start, d.memory_end);
+    sprintf(b, "type: %s\r\nop: %c\r\nstart: %d\r\nend: %d\r\n", d.command_type, d.op, d.memory_start, d.memory_end);
     printlen(b, strlen(b));
 }
 
@@ -31,13 +31,16 @@ debug_command parse_command(char* input) {
     while (strcmp(token, "#")) {
         d.argc++;
         switch (d.argc) {
-        case type:
+        case TYPE:
             d.command_type = token;
             break;
-        case start_addr:
+        case OP:
+            d.op = token[0];
+            break;
+        case START_ADDR:
             d.memory_start = strtol(token, NULL, 16);
             break;
-        case end_addr:
+        case END_ADDR:
             d.memory_end = strtol(token, NULL, 16);
             break;
         default:

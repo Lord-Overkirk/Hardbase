@@ -173,7 +173,16 @@ int task_main() {
     if (!strcmp(dc.command_type, "REG")) {
         print_regs();
     } else if (!strcmp(dc.command_type, "MEM")) {
-        
+        switch (dc.op) {
+        case 'r':
+            dump_byte_range(dc.memory_start, dc.memory_end);
+            break;
+        case 'w':
+            // TODO
+            break;
+        default:
+            break;
+        }
     }
     return 0;
 }

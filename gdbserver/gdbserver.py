@@ -96,6 +96,9 @@ class GdbServer:
                 addr, size = payload_raw.split(',')
                 addr = int(addr, 16)
                 size = int(size, 16)
+                print("mem", addr, size)
+                self.at.get_memory(addr, size)
+
 
                 fake_mem = 0xdeadbeef
                 self.write_packet(str(fake_mem))
@@ -105,6 +108,9 @@ class GdbServer:
                 csrp = registers[-8:]
                 if (int(payload_raw) > 15):
                     self.write_packet(csrp)
+            case 'P':
+                print("TODO: setting registers")
+                # print(payload_raw)
             case _:
                 print("Should handle case {0}".format(cmd_type))
 
