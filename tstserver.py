@@ -33,8 +33,8 @@ class ATDebugger:
                                      bytesize=8,
                                      parity=serial.PARITY_NONE,
                                      stopbits=1,
-                                     timeout=None,
-                                     write_timeout=.1,
+                                     timeout=0.1,
+                                     write_timeout=None,
                                      xonxoff=False,
                                      rtscts=False,
                                      dsrdtr=False)
@@ -43,22 +43,29 @@ class ATDebugger:
             exit()
 
     def send_msg(self, command):
+        data = b''
         a = self.ser.write(command.encode())
-        buff = ''
-        while buff == '':
-            print("en hier", self.ser.in_waiting)
-            data = self.ser.read(self.ser.in_waiting or 1)
+        while data == b'':
+            time.sleep(1)
+            # print(a, command)
+            data = self.ser.read_until(b'OK\r\n')
+            # print(data)
             # while buff[-4:] != 'OK\r\n' and data != b'':
             #     data = self.ser.read(1)
             #     buff += data.decode()
             # print(buff)
             if data:
                 # print(data)
-                buff += data.decode()
+                buff = data.decode()
                 print(buff)
-            else:
-                print("niks")
+            # else:
+            #     print("niks", data)
 
-
+# while True:
 at = ATDebugger()
+# print("start")
 at.send_msg("AT\r\n")
+at.send_msg("AT+CHNSELCT\r\n")
+at.send_msg("AT+DEBUG=REG|r\r\n")
+
+# time.sleep(0.2)
