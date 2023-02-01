@@ -98,17 +98,23 @@ class GdbServer:
                 addr = int(addr, 16)
                 size = int(size, 16)
                 print("mem", hex(addr), size)
-                raw_bytes = self.at.get_memory(addr, size)
+                raw_bytes = self.at.read_memory(addr, size)
                 self.write_packet(raw_bytes)
             case 'p':
                 registers = self.at.get_registers()
                 rs = registers[:-8]
+
+                # Figure out if endianness should be converted.
                 csrp = registers[-8:]
+                csrp = "".join(reversed([csrp[i:i+2] for i in range(0, len(csrp), 2)]))
+                print(csrp)
                 if (int(payload_raw) > 15):
                     self.write_packet(csrp)
             case 'P':
                 print("TODO: setting registers")
                 # print(payload_raw)
+            case 'Z':
+                print(payload_raw)
             case _:
                 print("Should handle case {0}".format(cmd_type))
 
