@@ -11,6 +11,8 @@ typedef struct debug_command {
     char op;
     uint32_t memory_start;
     uint32_t memory_end;
+    uint32_t payload_size;
+    char* payload;
 } debug_command;
 
 debug_command parse_command(char*);
@@ -21,7 +23,9 @@ enum debug_command_field {
     TYPE = 1,
     OP = 2,
     START_ADDR = 3,
-    END_ADDR = 4
+    END_ADDR = 4,
+    PAYLOAD_SIZE = 5,
+    PAYLOAD = 6
 };
 
 #endif

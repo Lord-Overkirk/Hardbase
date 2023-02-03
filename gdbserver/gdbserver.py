@@ -5,7 +5,9 @@ import socket
 from ATDebugger import ATDebugger
 
 INTERRUPT_CHAR = '\x03'
-ARCH_STR = 'l<target version=\"1.0\"><architecture>arm</architecture></target>'
+# ARCH_STR = 'l<target version=\"1.0\"><architecture>arm</architecture></target>'
+with open('target.xml', 'r') as file:
+    ARCH_STR = file.read().replace('\n', '').replace('    ', '')
 
 
 class GdbServer:
@@ -48,6 +50,7 @@ class GdbServer:
             case 'Supported':
                 self.write_packet('PacketSize=8000;qXfer:features:read+')
             case 'Xfer':
+                print(query_cmd, payload)
                 self.write_packet(ARCH_STR)
             case 'TStatus':
                 self.write_packet('')
@@ -87,10 +90,11 @@ class GdbServer:
             case '?':
                 self.write_packet('S00')
             case 'g':
+                print(payload_raw)
                 # Registers
                 registers = self.at.get_registers()
-                # print(registers)
                 rs = registers[:-8]
+                print("rs", rs)
                 csrp = registers[-8:]
                 self.write_packet(rs)
             case 'm':
@@ -101,15 +105,15 @@ class GdbServer:
                 raw_bytes = self.at.read_memory(addr, size)
                 self.write_packet(raw_bytes)
             case 'p':
+                print(payload_raw)
                 registers = self.at.get_registers()
                 rs = registers[:-8]
 
-                # Figure out if endianness should be converted.
-                csrp = registers[-8:]
-                csrp = "".join(reversed([csrp[i:i+2] for i in range(0, len(csrp), 2)]))
-                print(csrp)
-                if (int(payload_raw) > 15):
-                    self.write_packet(csrp)
+                cprs = registers[-8:]
+                # cprs = "".join(reversed([cprs[i:i+2] for i in range(0, len(cprs), 2)]))
+                print("cprs", cprs)
+                if (int(payload_raw, 16) == 25):
+                    self.write_packet("33000060")
             case 'P':
                 print("TODO: setting registers")
                 # print(payload_raw)

@@ -30,12 +30,19 @@ class ATDebugger:
         cmd_str = cmd.build()
         raw_response = self.send(cmd_str)
         reg_list = raw_response.splitlines()[2:-2]
+        print(reg_list)
         register_values = [reg.split(' ')[1].removeprefix('0x') for reg in reg_list]
         # Convert endianess
         r = [socket.htonl(int(reg, 16)) for reg in register_values]
         # r = [int(reg,16) for reg in register_values]
         regs = ['{:08x}'.format(reg) for reg in r]
         return ''.join(regs)
+
+    def write_memory(self, addr, payload):
+        cmd = DebugCommand.DebugCommand(DebugCommand.MEMORY, DebugCommand.WRITE, addr, payload=payload)
+        cmd_str = cmd.build()
+        r = self.send(cmd_str)
+        print(r)
 
     def read_memory(self, addr, size):
         """Read memory of specified size via AT commands."""
@@ -60,6 +67,9 @@ class ATDebugger:
             self.ser.write(cmd.encode())
             data = self.ser.read_until(b'OK\r\n')
             if data:
+                print(data)
                 return data.decode()
 
 # https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
+at = ATDebugger()
+at.write_memory(1234, "01be")

@@ -30,6 +30,16 @@ void print_hex(char* in, int len) {
     }
 }
 
+static inline void write_memory(unsigned int start, unsigned int size) {
+    volatile char* mem = (char*) start;
+    // for (unsigned int i = 0; i < size; i++) {
+    //     *(mem) = 0x70;
+    //     *(mem+1) = 0x70;
+    // }
+    memcpy((void*)0x40a9794c, "\xff", 1);
+    memcpy((void*)0x40a9794d, "\xff", 1);
+}
+
 /* Dump the bytes as hex in the specified range. */
 void dump_byte_range(unsigned int start, unsigned int end) {
     if (start > end) {
@@ -115,7 +125,7 @@ static inline void print_regs() {
     printlen(buffer, strlen(buffer));
     sprintf(buffer, "pc: 0x%08x\r\n", get_pc());
     printlen(buffer, strlen(buffer));
-    sprintf(buffer, "cspr: 0x%08x\r\n", get_cspr());
+    sprintf(buffer, "cpsr: 0x%08x\r\n", get_cspr());
     printlen(buffer, strlen(buffer));
 }
 
@@ -168,10 +178,11 @@ int task_main() {
 
     char* command = get_command();
 
-    printcrlf();
+    // printcrlf();
     debug_command dc = parse_command(command);
     if (!strcmp(dc.command_type, "REG")) {
         print_regs();
+        write_memory(0x4061b90c, 2);
     } else if (!strcmp(dc.command_type, "MEM")) {
         switch (dc.op) {
         case 'r':
@@ -179,10 +190,15 @@ int task_main() {
             break;
         case 'w':
             // TODO
+            print_hex(dc.payload, 2);
             break;
         default:
             break;
         }
     }
+    // volatile char * target = (char * )0x4061b90c;
+    // *target = 0x70;
+    // AT+DEBUG=MEM|r|0x4061b90c|0x4061b90e
+    // AT+DEBUG=MEM|r|0x40a9794c|0x40a9794d
     return 0;
 }

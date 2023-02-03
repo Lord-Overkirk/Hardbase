@@ -6,8 +6,22 @@
 
 void print_debug_command(debug_command d) {
     char b[100];
-    sprintf(b, "type: %s\r\nop: %c\r\nstart: %d\r\nend: %d\r\n", d.command_type, d.op, d.memory_start, d.memory_end);
+    sprintf(b, "type: %s\r\nop: %c\r\nstart: %d\r\nend: %d\r\npayload_size %d\r\n",
+            d.command_type, d.op, d.memory_start, d.memory_end, d.payload_size);
     printlen(b, strlen(b));
+}
+
+void payload_to_cmd(char* payload, debug_command* cmd) {
+    char result[cmd->payload_size];
+    char to_parse[2];
+    char buff[50];
+    for (size_t i = 0; i < cmd->payload_size; i++) {
+        memcpy(to_parse, payload+(i*2), 2);
+        sprintf(buff, "payload: %c\r\n", (char)strtol(to_parse, NULL, 16));
+        printlen(buff, strlen(buff));
+        result[i] = (char)strtol(to_parse, NULL, 16);
+    }
+    cmd->payload = result;
 }
 
 /**
@@ -25,6 +39,8 @@ debug_command parse_command(char* input) {
         command = strtok(NULL, "=");
     }
 
+    char buff[50];
+    char to_parse[2];
     debug_command d;
     d.argc = 0;
     char* token = strtok(res, "|");
@@ -43,11 +59,18 @@ debug_command parse_command(char* input) {
         case END_ADDR:
             d.memory_end = strtol(token, NULL, 16);
             break;
+        case PAYLOAD_SIZE:
+            d.payload_size = strtol(token, NULL, 16);
+            break;
+        case PAYLOAD:
+            payload_to_cmd(token, &d);
+            break;
         default:
             break;
         }
         token = strtok(NULL, "|");
     }
+    // print_debug_command(d);
     return d;
 }
 
