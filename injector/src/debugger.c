@@ -30,14 +30,15 @@ void print_hex(char* in, int len) {
     }
 }
 
-static inline void write_memory(unsigned int start, unsigned int size) {
-    volatile char* mem = (char*) start;
+static inline void write_memory(unsigned int start, char* payload, unsigned int size) {
+    print_hex(payload, 2);
+    volatile char* dst = (char*) start;
     // for (unsigned int i = 0; i < size; i++) {
     //     *(mem) = 0x70;
     //     *(mem+1) = 0x70;
     // }
-    memcpy((void*)0x40a9794c, "\xff", 1);
-    memcpy((void*)0x40a9794d, "\xff", 1);
+    printcrlf();
+    memcpy((void*)dst, payload, size);
 }
 
 /* Dump the bytes as hex in the specified range. */
@@ -182,15 +183,14 @@ int task_main() {
     debug_command dc = parse_command(command);
     if (!strcmp(dc.command_type, "REG")) {
         print_regs();
-        write_memory(0x4061b90c, 2);
     } else if (!strcmp(dc.command_type, "MEM")) {
         switch (dc.op) {
         case 'r':
             dump_byte_range(dc.memory_start, dc.memory_end);
             break;
         case 'w':
-            // TODO
             print_hex(dc.payload, 2);
+            write_memory(dc.memory_start, dc.payload, dc.payload_size);
             break;
         default:
             break;

@@ -51,6 +51,7 @@ class ATDebugger:
         cmd.memory_end = addr + size
         cmd_str = cmd.build()
         raw_response = self.send(cmd_str)
+        # print(raw_response)
         hex_bytes = raw_response.splitlines()[2].split()
         return ''.join(hex_bytes)
 
@@ -64,12 +65,16 @@ class ATDebugger:
 
     def send(self, cmd):
         while True:
+            print("SENDING: ", cmd)
             self.ser.write(cmd.encode())
             data = self.ser.read_until(b'OK\r\n')
             if data:
-                print(data)
+                # print(data)
                 return data.decode()
 
 # https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
 at = ATDebugger()
-at.write_memory(1234, "01be")
+b = at.read_memory(1234, 2)
+print("b: ", b)
+# at.write_memory(1234, "01be")
+at.write_memory(1234, "3c3d")

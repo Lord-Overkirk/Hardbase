@@ -28,7 +28,7 @@ class DebugCommand:
         # else:
         self.payload = payload
         if self.payload is not None:
-            self.payload_size = int(len(payload)/2)
+            self.payload_size = len(payload)
         else:
             self.payload_size = 0
 
