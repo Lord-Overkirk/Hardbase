@@ -31,13 +31,11 @@ void print_hex(char* in, int len) {
 }
 
 static inline void write_memory(unsigned int start, char* payload, unsigned int size) {
-    print_hex(payload, 2);
     volatile char* dst = (char*) start;
     // for (unsigned int i = 0; i < size; i++) {
     //     *(mem) = 0x70;
     //     *(mem+1) = 0x70;
     // }
-    printcrlf();
     memcpy((void*)dst, payload, size);
 }
 
@@ -189,7 +187,6 @@ int task_main() {
             dump_byte_range(dc.memory_start, dc.memory_end);
             break;
         case 'w':
-            print_hex(dc.payload, 2);
             write_memory(dc.memory_start, dc.payload, dc.payload_size);
             break;
         default:

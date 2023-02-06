@@ -59,7 +59,8 @@ class GdbServer:
             case 'sThreadInfo':
                 self.write_packet('1')
             case 'Attached':
-                self.write_packet('0')
+                # Existing proc
+                self.write_packet('1')
             case 'C':
                 self.write_packet('0')
             case _:
@@ -77,14 +78,23 @@ class GdbServer:
     def read_command(self, cmd):
         cmd_type = cmd[0]
         payload_raw = cmd[1:]
-
+        print(cmd_type, payload_raw)
         match cmd_type:
+            case 'c':
+                self.write_packet('OK')
+                registers = self.at.get_registers()
+            case 's':
+                self.write_packet('OK')
+                registers = self.at.get_registers()
             case 'q':
                 self.handle_query_packet(payload_raw)
             case 'v':
+                print(payload_raw)
                 if payload_raw == "MustReplyEmpty":
                     self.write_packet("")
-                    pass
+                if payload_raw == "Cont?":
+                    print("hierr")
+                    self.write_packet('vCont;c;s;')
             case 'H':
                 self.write_packet("OK")
             case '?':
@@ -94,14 +104,14 @@ class GdbServer:
                 # Registers
                 registers = self.at.get_registers()
                 rs = registers[:-8]
-                print("rs", rs)
+                # print("rs", rs)
                 csrp = registers[-8:]
                 self.write_packet(rs)
             case 'm':
                 addr, size = payload_raw.split(',')
                 addr = int(addr, 16)
                 size = int(size, 16)
-                print("mem", hex(addr), size)
+                # print("mem", hex(addr), size)
                 raw_bytes = self.at.read_memory(addr, size)
                 self.write_packet(raw_bytes)
             case 'p':
@@ -111,16 +121,20 @@ class GdbServer:
 
                 cprs = registers[-8:]
                 # cprs = "".join(reversed([cprs[i:i+2] for i in range(0, len(cprs), 2)]))
-                print("cprs", cprs)
+                # print("cprs", cprs)
                 if (int(payload_raw, 16) == 25):
                     self.write_packet("33000060")
             case 'P':
                 print("TODO: setting registers")
                 # print(payload_raw)
             case 'Z':
-                print(payload_raw)
+                # print("asdf")
+                b_type, addr, kind = payload_raw.split(',')
+                print("inserting bpt ", b_type, addr, kind)
+                self.at.insert_breakpoint(addr, kind)
+                # b* 0x47c001ce
             case _:
-                print("Should handle case {0}".format(cmd_type))
+                print("Should handle case {0}".format(cmd_type), payload_raw)
 
     def receive(self):
         raw_data = self.sock.recv(2048)

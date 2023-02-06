@@ -12,7 +12,7 @@ typedef struct debug_command {
     uint32_t memory_start;
     uint32_t memory_end;
     uint32_t payload_size;
-    char* payload;
+    char payload[4];
 } debug_command;
 
 debug_command parse_command(char*);

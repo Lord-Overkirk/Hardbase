@@ -2,7 +2,11 @@ import serial
 import DebugCommand
 import socket
 
-TTY = '/dev/ttyACM0'
+TTY = '/dev/tty.usbmodem11202'
+
+class WriteFailedException(Exception):
+    "Memory write failed"
+    pass
 
 class ATDebugger:
     def __init__(self):
@@ -42,7 +46,9 @@ class ATDebugger:
         cmd = DebugCommand.DebugCommand(DebugCommand.MEMORY, DebugCommand.WRITE, addr, payload=payload)
         cmd_str = cmd.build()
         r = self.send(cmd_str)
-        print(r)
+        if r[-4:] != 'OK\r\n':
+            raise WriteFailedException
+
 
     def read_memory(self, addr, size):
         """Read memory of specified size via AT commands."""
@@ -58,23 +64,18 @@ class ATDebugger:
     def insert_breakpoint(self, addr, size):
         if size == 2:
             # ARM Thumb
-            breakpoint_instr = 0x01be       # bkpt 0x1
+            breakpoint_instr = '01be'       # bkpt 0x1
+            self.write_memory(addr, breakpoint_instr)
         elif size == 4:
             # ARM
             pass
 
     def send(self, cmd):
         while True:
-            print("SENDING: ", cmd)
             self.ser.write(cmd.encode())
             data = self.ser.read_until(b'OK\r\n')
             if data:
-                # print(data)
                 return data.decode()
 
 # https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
-at = ATDebugger()
-b = at.read_memory(1234, 2)
-print("b: ", b)
-# at.write_memory(1234, "01be")
-at.write_memory(1234, "3c3d")
+

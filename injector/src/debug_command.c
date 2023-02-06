@@ -11,18 +11,16 @@ void print_debug_command(debug_command d) {
     printlen(b, strlen(b));
 }
 
-void payload_to_cmd(char* payload, debug_command cmd) {
-    char result[cmd.payload_size];
+void payload_to_cmd(char* payload, debug_command* cmd) {
+    char result[4];
 
     /* Every two ascii chars contribute to a single byte. */
     char to_parse[2];
-    for (size_t i = 0; i < cmd.payload_size; i++) {
+    for (size_t i = 0; i < cmd->payload_size; i++) {
         memcpy(to_parse, payload+(i*2), 2);
         result[i] = (char)strtol(to_parse, NULL, 16);
     }
-    memcpy(cmd.payload, result, 2);
-    // cmd.payload = result;
-    printlen(cmd.payload, 2);
+    memcpy(cmd->payload, result, 2);
 }
 
 /**
@@ -62,7 +60,7 @@ debug_command parse_command(char* input) {
             d.payload_size = strtol(token, NULL, 16);
             break;
         case PAYLOAD:
-            payload_to_cmd(token, d);
+            payload_to_cmd(token, &d);
             break;
         default:
             break;
