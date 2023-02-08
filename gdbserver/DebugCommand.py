@@ -48,7 +48,6 @@ class DebugCommand:
                          self.op + SEPARATOR + \
                          '{:08x}'.format(self.memory_start) + SEPARATOR + \
                          '{:08x}'.format(self.memory_end) + SEPARATOR
-        # if self.payload is not None:
         string_to_send += str(self.payload_size)
         if self.payload_size != 0:
             string_to_send += SEPARATOR + self.payload

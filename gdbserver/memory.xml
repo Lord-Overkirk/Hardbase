@@ -1,0 +1,24 @@
+<memory-map>
+    <memory type="ram" start="0x00000000" length="0x8000"></memory>
+    <memory type="ram" start="0x04000000" length="0x14000"></memory>
+    <memory type="ram" start="0x04014000" length="0x4000"></memory>
+    <memory type="ram" start="0x04014000" length="0x4000"></memory>
+    <memory type="ram" start="0x04018000" length="0x8000"></memory>
+    <memory type="ram" start="0x04800000" length="0x4000"></memory>
+    <memory type="ram" start="0x40000000" length="0x10000"></memory>
+    <memory type="ram" start="0x40010000" length="0xff0000"></memory>
+    <memory type="ram" start="0x41000000" length="0x3000000"></memory>
+    <memory type="ram" start="0x44000000" length="0x800000"></memory>
+    <memory type="ram" start="0x44800000" length="0x200000"></memory>
+    <memory type="ram" start="0x44a00000" length="0x2600000"></memory>
+    <memory type="ram" start="0x47000000" length="0x400000"></memory>
+    <memory type="ram" start="0x47400000" length="0x100000"></memory>
+    <memory type="ram" start="0x47500000" length="0x700000"></memory>
+    <memory type="ram" start="0x47c00000" length="0x400000"></memory>
+    <memory type="ram" start="0x48000000" length="0x800000"></memory>
+    <memory type="ram" start="0x80000000" length="0x60000000"></memory>
+    <memory type="ram" start="0xe0000000" length="0x400000"></memory>
+    <memory type="ram" start="0xe0400000" length="0xec00000"></memory>
+    <memory type="ram" start="0xef000000" length="0x1000000"></memory>
+    <memory type="ram" start="0xf0000000" length="0x10000000"></memory>
+</memory-map>

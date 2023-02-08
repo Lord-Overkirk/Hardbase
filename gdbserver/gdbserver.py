@@ -3,11 +3,13 @@ import os
 import sys
 import socket
 from ATDebugger import ATDebugger
+import xml.etree.ElementTree as XML
 
 INTERRUPT_CHAR = '\x03'
 # ARCH_STR = 'l<target version=\"1.0\"><architecture>arm</architecture></target>'
 with open('target.xml', 'r') as file:
     ARCH_STR = file.read().replace('\n', '').replace('    ', '')
+ARCH_STR = 'l' + ARCH_STR
 
 
 class GdbServer:
@@ -43,14 +45,13 @@ class GdbServer:
         packet_str = packet
         try:
             (query_cmd, payload) = packet_str.split(':', 1)
+            print(f"Handling {query_cmd} with payload: {payload}")
         except ValueError:
             query_cmd = packet_str
-
         match query_cmd:
             case 'Supported':
                 self.write_packet('PacketSize=8000;qXfer:features:read+')
             case 'Xfer':
-                print(query_cmd, payload)
                 self.write_packet(ARCH_STR)
             case 'TStatus':
                 self.write_packet('')
@@ -64,7 +65,7 @@ class GdbServer:
             case 'C':
                 self.write_packet('0')
             case _:
-                print("Should handle query case {0}".format(query_cmd))
+                print(f"Should handle query case {query_cmd}")
 
     def write_packet(self, payload):
         payload = payload.encode()
@@ -78,7 +79,7 @@ class GdbServer:
     def read_command(self, cmd):
         cmd_type = cmd[0]
         payload_raw = cmd[1:]
-        print(cmd_type, payload_raw)
+        print(f"Handling {cmd_type} with payload: {payload_raw}")
         match cmd_type:
             case 'c':
                 self.write_packet('OK')
@@ -89,12 +90,10 @@ class GdbServer:
             case 'q':
                 self.handle_query_packet(payload_raw)
             case 'v':
-                print(payload_raw)
                 if payload_raw == "MustReplyEmpty":
-                    self.write_packet("")
+                    self.write_packet('')
                 if payload_raw == "Cont?":
-                    print("hierr")
-                    self.write_packet('vCont;c;s;')
+                    self.write_packet('')
             case 'H':
                 self.write_packet("OK")
             case '?':
@@ -104,7 +103,6 @@ class GdbServer:
                 # Registers
                 registers = self.at.get_registers()
                 rs = registers[:-8]
-                # print("rs", rs)
                 csrp = registers[-8:]
                 self.write_packet(rs)
             case 'm':
@@ -121,17 +119,15 @@ class GdbServer:
 
                 cprs = registers[-8:]
                 # cprs = "".join(reversed([cprs[i:i+2] for i in range(0, len(cprs), 2)]))
-                # print("cprs", cprs)
                 if (int(payload_raw, 16) == 25):
                     self.write_packet("33000060")
             case 'P':
                 print("TODO: setting registers")
-                # print(payload_raw)
             case 'Z':
-                # print("asdf")
                 b_type, addr, kind = payload_raw.split(',')
                 print("inserting bpt ", b_type, addr, kind)
                 self.at.insert_breakpoint(addr, kind)
+                self.write_packet('OK')
                 # b* 0x47c001ce
             case _:
                 print("Should handle case {0}".format(cmd_type), payload_raw)

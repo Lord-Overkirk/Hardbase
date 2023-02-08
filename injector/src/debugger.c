@@ -172,12 +172,16 @@ static inline void print_stack2() {
     }
 }
 
+void insert_hw_bpt(uint32_t addr) {
+    asm("mov r0, %[to_break]" : : [to_break] "r" (addr));
+    asm("mcr p14,0,r0,c0,c0, 4");
+}
+
 int task_main() {
     printcrlf();
 
     char* command = get_command();
 
-    // printcrlf();
     debug_command dc = parse_command(command);
     if (!strcmp(dc.command_type, "REG")) {
         print_regs();
@@ -193,9 +197,5 @@ int task_main() {
             break;
         }
     }
-    // volatile char * target = (char * )0x4061b90c;
-    // *target = 0x70;
-    // AT+DEBUG=MEM|r|0x4061b90c|0x4061b90e
-    // AT+DEBUG=MEM|r|0x40a9794c|0x40a9794d
     return 0;
 }

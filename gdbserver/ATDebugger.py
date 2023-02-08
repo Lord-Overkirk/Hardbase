@@ -1,8 +1,7 @@
 import serial
 import DebugCommand
 import socket
-
-TTY = '/dev/tty.usbmodem11202'
+import sys
 
 class WriteFailedException(Exception):
     "Memory write failed"
@@ -10,6 +9,10 @@ class WriteFailedException(Exception):
 
 class ATDebugger:
     def __init__(self):
+        if sys.platform != 'darwin':
+            TTY = '/dev/ttyACM0'
+        else:
+            TTY = '/dev/tty.usbmodem11202'
         try:
             self.ser = serial.Serial(port=TTY,
                                      baudrate=9600,
@@ -22,7 +25,7 @@ class ATDebugger:
                                      rtscts=False,
                                      dsrdtr=False)
         except serial.SerialException:
-            print("Error: No modem running on port" + TTY)
+            print(f"Error: No modem running on port {TTY}")
             exit()
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
@@ -34,7 +37,6 @@ class ATDebugger:
         cmd_str = cmd.build()
         raw_response = self.send(cmd_str)
         reg_list = raw_response.splitlines()[2:-2]
-        print(reg_list)
         register_values = [reg.split(' ')[1].removeprefix('0x') for reg in reg_list]
         # Convert endianess
         r = [socket.htonl(int(reg, 16)) for reg in register_values]
@@ -57,15 +59,18 @@ class ATDebugger:
         cmd.memory_end = addr + size
         cmd_str = cmd.build()
         raw_response = self.send(cmd_str)
-        # print(raw_response)
         hex_bytes = raw_response.splitlines()[2].split()
         return ''.join(hex_bytes)
 
     def insert_breakpoint(self, addr, size):
+        size = int(size, base=10)
+        addr = int(addr, base=16)
         if size == 2:
             # ARM Thumb
+            old_instr = self.read_memory(addr, 2)
             breakpoint_instr = '01be'       # bkpt 0x1
             self.write_memory(addr, breakpoint_instr)
+            print(self.read_memory(addr, 2))
         elif size == 4:
             # ARM
             pass

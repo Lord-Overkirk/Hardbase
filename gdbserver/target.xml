@@ -1,4 +1,5 @@
-l<target version="1.0">
+<?xml version="1.0"?>
+<target>
     <architecture>arm</architecture>
     <feature name="org.gnu.gdb.arm.core">
         <reg name="r0" bitsize="32"/>
