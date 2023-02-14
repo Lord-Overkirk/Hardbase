@@ -196,20 +196,26 @@ void overwrite_handler() {
     // char* inject = "\x00\xe0\x4e\xe2\x1e\xff\x2f\xe1\x00\x00\x00\x00";
     // char* inject_branch_crlf = "\x00\xe0\x4e\xe2\x00\x40\x2d\xe9\x5f\xe2\x39\xfa";
     // char* inject = "b\x00\xf0\x5e\xe2";
-    write_memory(PREFETCH_ABORT, inject_nop, 12);
+    // char* inject_movs = "\x61\xe2\x39\xeb\x00\xf0\x5e\xe2";
+    write_memory(PREFETCH_ABORT, inject_nop, 8);
 
     memset(0x415983e4, 0, 12*4);
+    // char* branch = "\x97\xc1\xe3\xfa";
+    // write_memory(0x415983e4, branch, 4);
+    // branch = "\x95\xc1\xe3\xfa";
+    // write_memory(0x415983ec, branch, 4);
     return;
 }
 
 int task_main() {
     printcrlf();
-    // print_hex(0x415983e0, 12*4+4+4);
-    print_hex(0x400100bc, 12);
-    overwrite_handler();
+    print_hex(0x415983e0, 12*4+4+4);
+    pal_tasksleep(30000000);
+    // print_hex(0x400100bc, 12);
+    // overwrite_handler();
     printcrlf();
-    print_hex(0x400100bc, 12);
-    // print_hex(0x415983e0, 12*4+4+4);
+    // print_hex(0x400100bc, 12);
+    print_hex(0x415983e0, 12*4+4+4);
 
 
     char* command = get_command();
@@ -229,7 +235,7 @@ int task_main() {
             break;
         }
     }
-    asm("bkpt");
+    // asm("bkpt");
     asm("nop");
     asm("nop");
     asm("nop");
