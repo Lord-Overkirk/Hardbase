@@ -15,6 +15,7 @@ thumb_functions = {
     "strtok": 0x40f7c639,
     "strtol": 0x40a9794d,
     "atoi": 0x40f0153d,
+    "debug_payload": 0x47C00001,
 }
 
 arm_functions = {

@@ -82,8 +82,8 @@ class GdbServer:
         print(f"Handling {cmd_type} with payload: {payload_raw}")
         match cmd_type:
             case 'c':
-                self.write_packet('OK')
-                registers = self.at.get_registers()
+                self.write_packet('S05')
+                # registers = self.at.get_registers()
             case 's':
                 self.write_packet('OK')
                 registers = self.at.get_registers()
@@ -111,6 +111,7 @@ class GdbServer:
                 size = int(size, 16)
                 # print("mem", hex(addr), size)
                 raw_bytes = self.at.read_memory(addr, size)
+                print(raw_bytes)
                 self.write_packet(raw_bytes)
             case 'p':
                 print(payload_raw)
@@ -125,7 +126,6 @@ class GdbServer:
                 print("TODO: setting registers")
             case 'Z':
                 b_type, addr, kind = payload_raw.split(',')
-                print("inserting bpt ", b_type, addr, kind)
                 self.at.insert_breakpoint(addr, kind)
                 self.write_packet('OK')
                 # b* 0x47c001ce

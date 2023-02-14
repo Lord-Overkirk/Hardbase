@@ -36,6 +36,7 @@ class ATDebugger:
         cmd = DebugCommand.DebugCommand(DebugCommand.REGISTERS, DebugCommand.READ)
         cmd_str = cmd.build()
         raw_response = self.send(cmd_str)
+        print(raw_response)
         reg_list = raw_response.splitlines()[2:-2]
         register_values = [reg.split(' ')[1].removeprefix('0x') for reg in reg_list]
         # Convert endianess
@@ -48,6 +49,7 @@ class ATDebugger:
         cmd = DebugCommand.DebugCommand(DebugCommand.MEMORY, DebugCommand.WRITE, addr, payload=payload)
         cmd_str = cmd.build()
         r = self.send(cmd_str)
+        print(r)
         if r[-4:] != 'OK\r\n':
             raise WriteFailedException
 
@@ -69,8 +71,10 @@ class ATDebugger:
             # ARM Thumb
             old_instr = self.read_memory(addr, 2)
             breakpoint_instr = '01be'       # bkpt 0x1
+            print("Inserting bkpt at:" + hex(addr))
+            print(self.read_memory(addr, 8))
             self.write_memory(addr, breakpoint_instr)
-            print(self.read_memory(addr, 2))
+            print(self.read_memory(addr, 8))
         elif size == 4:
             # ARM
             pass

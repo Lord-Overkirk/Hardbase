@@ -57,7 +57,8 @@ debug_command parse_command(char* input) {
             d.memory_end = strtol(token, NULL, 16);
             break;
         case PAYLOAD_SIZE:
-            d.payload_size = strtol(token, NULL, 16);
+            /* divide by 2 because four chars ascii hex is two bytes */
+            d.payload_size = strtol(token, NULL, 16)/2;
             break;
         case PAYLOAD:
             payload_to_cmd(token, &d);

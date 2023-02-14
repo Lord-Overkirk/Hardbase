@@ -6,6 +6,7 @@
 #include "stdlib.h"
 #include <common.h>
 
+#define PREFETCH_ABORT 0x400100bc
 
 const char TASK_NAME[] = "DEBUG\0";
 
@@ -177,8 +178,39 @@ void insert_hw_bpt(uint32_t addr) {
     asm("mcr p14,0,r0,c0,c0, 4");
 }
 
+/**
+ * @brief Overwrite the prefetch abort handler. The link register is not decremented by one instr.
+ * 
+ */
+void overwrite_handler() {
+    /*
+        sub    lr, lr 0x0
+        stmbd  sp!, {lr}
+        nop
+        nop
+        nop
+        nop
+    */
+    char* inject_nop = "\x00\xe0\x4e\xe2\x00\x40\x2d\xe9\x00\x00\x00\x00";
+    // char* inject_branch_handler = "\x00\xe0\x4e\xe2\x00\x40\x2d\xe9\xc5\x20\x56\xeb";
+    // char* inject = "\x00\xe0\x4e\xe2\x1e\xff\x2f\xe1\x00\x00\x00\x00";
+    // char* inject_branch_crlf = "\x00\xe0\x4e\xe2\x00\x40\x2d\xe9\x5f\xe2\x39\xfa";
+    // char* inject = "b\x00\xf0\x5e\xe2";
+    write_memory(PREFETCH_ABORT, inject_nop, 12);
+
+    memset(0x415983e4, 0, 12*4);
+    return;
+}
+
 int task_main() {
     printcrlf();
+    // print_hex(0x415983e0, 12*4+4+4);
+    print_hex(0x400100bc, 12);
+    overwrite_handler();
+    printcrlf();
+    print_hex(0x400100bc, 12);
+    // print_hex(0x415983e0, 12*4+4+4);
+
 
     char* command = get_command();
 
@@ -197,5 +229,9 @@ int task_main() {
             break;
         }
     }
+    asm("bkpt");
+    asm("nop");
+    asm("nop");
+    asm("nop");
     return 0;
 }

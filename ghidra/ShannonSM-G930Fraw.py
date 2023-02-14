@@ -18,6 +18,8 @@ arm_functions = {
     "prefetch_abort": b'\x04\xe0\x4e\xe2\x00\x40\x2d\xe9'
 }
 
+function_addrs = {}
+
 def rename_functions(functions, TMode):
     mgr = currentProgram.getFunctionManager()
 
@@ -32,6 +34,7 @@ def rename_functions(functions, TMode):
     for func_name in functions:
         entry_addr = find(toAddr(0), functions.get(func_name))
         if entry_addr is not None:
+            function_addrs.update({func_name: entry_addr})
             print(entry_addr)
         else:
             raise
@@ -49,9 +52,16 @@ def rename_functions(functions, TMode):
     for f in addr_set:
         disassemble(f.getMinAddress())
 
+def custom_prefetch_abort():
+    print(function_addrs)
+    # print(prefetch_abort_entry, "pref")
+
+
 def main():
     rename_functions(arm_functions, False)
     rename_functions(thumb_functions, True)
+
+    custom_prefetch_abort()
 
 if __name__ == "__main__":
     main()
