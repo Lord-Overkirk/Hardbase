@@ -11,7 +11,6 @@ def u32(data):
 def p32(data):
     return pack("<I", data)
 
-
 class TOC_entry:
     @staticmethod
     def parse_entry(entry):
@@ -39,18 +38,18 @@ class TOC_entry:
         self.seg_data = seg_data
 
     def is_loadable(self):
-        if self.name in ["BOOT","MAIN","INJECT"]:
+        if self.name in ["BOOT","MAIN","INJECT", "ABORT"]:
             return True
         return False
 
     def compute_crc(self):
-        if self.name not in ["BOOT","MAIN","INJECT"]:
+        if self.name not in ["BOOT","MAIN","INJECT", "ABORT"]:
             self.crc = 0
         else:
             self.crc = zlib.crc32(self.seg_data) & 0xFFFFFFFF
 
     def check_crc(self):
-        if self.name not in ["BOOT","MAIN","INJECT"]:
+        if self.name not in ["BOOT","MAIN","INJECT", "ABORT"]:
             return True
         ccrc = zlib.crc32(self.seg_data) & 0xFFFFFFFF
         if ccrc == self.crc:
@@ -104,6 +103,17 @@ class TOC:
         main_pos = self.entries.index(main)
         self.entries.insert(main_pos + 1, seg_entry)
 
+    def add_segment_after_inject(self, name, data, addr, etype):
+        main = self.get_seg_by_name("INJECT")
+        offset_in_file = main.b_off + main.size
+        # align 0x20
+        if offset_in_file % 0x20:
+            offset_in_file += (offset_in_file % 0x20)
+        seg_entry = TOC_entry(name, offset_in_file, addr, 0, etype, len(data), data)
+        seg_entry.compute_crc()
+        main_pos = self.entries.index(main)
+        self.entries.insert(main_pos + 1, seg_entry)
+
     def pack_header(self):
         self.header = self.header[:0x1C] + p32(len(self.entries))
         return self.header
@@ -130,7 +140,6 @@ class TOC:
 
 
 if __name__ == "__main__":
-    print(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3])
     data = open(sys.argv[2],"rb").read()
     toc = TOC(data)
     main_seg = toc.get_seg_by_name("MAIN")
@@ -143,6 +152,8 @@ if __name__ == "__main__":
     #main_seg.seg_data = main_seg.seg_data[:0x90] + p32(inject_addr + 0xc) + main_seg.seg_data[0x94:]  # prefetch
     #main_seg.seg_data = main_seg.seg_data[:0x94] + p32(inject_addr + 0x10) + main_seg.seg_data[0x98:] # data abort
     #main_seg.seg_data = main_seg.seg_data[:0x9C] + p32(inject_addr + 0x18) + main_seg.seg_data[0xA0:] # irq
+    # print(bytes(main_seg.seg_data[:0x90] + p32(inject_addr + 0xc)))
+    print(":".join("{:02x}".format(ord(c)) for c in main_seg.seg_data[:0x90]))
     off = main_seg.seg_data.find('+LEDTEST\0')
     print((main_seg.seg_data[off+9]), hex(off))
     main_seg.seg_data = main_seg.seg_data[:off] + '+DEBUG\0\0\0' + main_seg.seg_data[off+9:]
@@ -160,6 +171,8 @@ if __name__ == "__main__":
 
     
     toc.add_segment_after_main(name, data_to_inject, inject_addr, 2)
+
+    toc.add_segment_after_inject("ABORT", b'\x01\x01\x01\x01', 0x47D00000, 2)
 
     patched_data = toc.pack_all()
 

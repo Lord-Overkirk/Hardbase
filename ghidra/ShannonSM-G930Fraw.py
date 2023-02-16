@@ -9,40 +9,30 @@ import ghidra.program.model.address.AddressSet as AddressSet
 import ghidra.app.cmd.disassemble.ArmDisassembleCommand as ArmDisassembleCommand
 import ghidra.program.flatapi.FlatProgramAPI as FlatProgramAPI
 
+
 thumb_functions = {
-    'debugger_payload': b'\xb5\x89\xb0\x48\xf6\x49\x23\xc4\xf2\xe8\x03',
-    'print_regs': b'\xb5\x8f\xb0\x02\x46'
+    'debugger_payload': 0x0262ee90,
+    'print_regs': 0x0262ef38,
 }
 
 arm_functions = {
-    "prefetch_abort": b'\x04\xe0\x4e\xe2\x00\x40\x2d\xe9'
+    "prefetch_abort": 0x0000283c,
 }
 
-function_addrs = {}
+# function_addrs = {}
 
 def rename_functions(functions, TMode):
-    mgr = currentProgram.getFunctionManager()
-
     tmode_reg = currentProgram.getProgramContext().getRegister("TMode")
     if tmode_reg is not None:
         if TMode:
-            arm_mode = RegisterValue(tmode_reg, b'0x1')
+            RegisterValue(tmode_reg, b'0x1')
         else:
-            arm_mode = RegisterValue(tmode_reg, b'0x0')
+            RegisterValue(tmode_reg, b'0x0')
     addr_set = AddressSet()
 
     for func_name in functions:
-        entry_addr = find(toAddr(0), functions.get(func_name))
-        if entry_addr is not None:
-            function_addrs.update({func_name: entry_addr})
-            print(entry_addr)
-        else:
-            raise
-
-        if TMode:
-            created = createFunction(entry_addr.previous(), func_name)
-        else:
-            created = createFunction(entry_addr, func_name)
+        entry_addr = toAddr(functions.get(func_name))
+        createFunction(entry_addr, func_name)
 
         addr_set.addRange(entry_addr, entry_addr)
 
@@ -53,15 +43,14 @@ def rename_functions(functions, TMode):
         disassemble(f.getMinAddress())
 
 def custom_prefetch_abort():
-    print(function_addrs)
-    # print(prefetch_abort_entry, "pref")
+    pass
 
 
 def main():
     rename_functions(arm_functions, False)
     rename_functions(thumb_functions, True)
 
-    custom_prefetch_abort()
+    # custom_prefetch_abort()
 
 if __name__ == "__main__":
     main()

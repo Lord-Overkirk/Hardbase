@@ -198,8 +198,16 @@ void overwrite_handler() {
     // char* inject = "b\x00\xf0\x5e\xe2";
     // char* inject_movs = "\x61\xe2\x39\xeb\x00\xf0\x5e\xe2";
     write_memory(PREFETCH_ABORT, inject_nop, 8);
+    char* arm_v7_nop = "\x00\xf0\x20\xe3";
 
-    memset(0x415983e4, 0, 12*4);
+    // for (int i = 0; i < 2; i++) {
+    //     write_memory(0x4159840c + (i*4), arm_v7_nop, 4);
+    // }
+    // char* blx_crlf = "\x8d\xc1\xe3\xfa";
+    // write_memory(0x4159840c, blx_crlf, 4);
+    // write_memory(0x415983e8, arm_v7_nop, 4);
+    // write_memory(0x415983ec, arm_v7_nop, 4);
+    // memset((void*)0x41598410, 0, 12*4);
     // char* branch = "\x97\xc1\xe3\xfa";
     // write_memory(0x415983e4, branch, 4);
     // branch = "\x95\xc1\xe3\xfa";
@@ -209,13 +217,15 @@ void overwrite_handler() {
 
 int task_main() {
     printcrlf();
-    print_hex(0x415983e0, 12*4+4+4);
-    pal_tasksleep(30000000);
-    // print_hex(0x400100bc, 12);
-    // overwrite_handler();
+    print_hex((char*)0x400100bc, 16);
     printcrlf();
-    // print_hex(0x400100bc, 12);
-    print_hex(0x415983e0, 12*4+4+4);
+    print_hex((char*)0x415983e0, 12*4+4+4);
+    // pal_tasksleep(300000000);
+    overwrite_handler();
+    printcrlf();
+    print_hex((char*)0x400100bc, 16);
+    printcrlf();
+    print_hex((char*)0x415983e0, 12*4+4+4);
 
 
     char* command = get_command();
@@ -223,6 +233,10 @@ int task_main() {
     debug_command dc = parse_command(command);
     if (!strcmp(dc.command_type, "REG")) {
         print_regs();
+        asm("bkpt");
+        asm("nop");
+        asm("nop");
+        asm("nop");
     } else if (!strcmp(dc.command_type, "MEM")) {
         switch (dc.op) {
         case 'r':
@@ -235,9 +249,5 @@ int task_main() {
             break;
         }
     }
-    // asm("bkpt");
-    asm("nop");
-    asm("nop");
-    asm("nop");
     return 0;
 }

@@ -16,6 +16,8 @@ thumb_functions = {
     "strtol": 0x40a9794d,
     "atoi": 0x40f0153d,
     "debug_payload": 0x47C00001,
+    "pal_tasksleep": 0x40f0cd6d,
+    "pal_TaskGetCurrentId": 0x40f0ca35,
 }
 
 arm_functions = {
@@ -37,6 +39,7 @@ def rename_functions(functions, TMode):
         func_entry = toAddr(functions.get(name))
         if TMode:
             created = createFunction(func_entry.previous(), name)
+            print("hier", name)
         else:
             created = createFunction(func_entry, name)
 
