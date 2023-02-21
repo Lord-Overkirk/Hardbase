@@ -153,32 +153,33 @@ if __name__ == "__main__":
     #main_seg.seg_data = main_seg.seg_data[:0x94] + p32(inject_addr + 0x10) + main_seg.seg_data[0x98:] # data abort
     #main_seg.seg_data = main_seg.seg_data[:0x9C] + p32(inject_addr + 0x18) + main_seg.seg_data[0xA0:] # irq
     # print(bytes(main_seg.seg_data[:0x90] + p32(inject_addr + 0xc)))
-    print(":".join("{:02x}".format(ord(c)) for c in main_seg.seg_data[:0x90]))
     off = main_seg.seg_data.find('+LEDTEST\0')
-    print((main_seg.seg_data[off+9]), hex(off))
     main_seg.seg_data = main_seg.seg_data[:off] + '+DEBUG\0\0\0' + main_seg.seg_data[off+9:]
     # print(main_seg.seg_data[:off])
 
     # find pointer to ledtest function handler
     pointer_off = main_seg.seg_data.find(p32(main_seg.m_off + off)) + 12
     main_seg.seg_data = main_seg.seg_data[:pointer_off] + p32(inject_addr | 1) + main_seg.seg_data[pointer_off+4:]
-    print(hex(pointer_off), hex(pointer_off+main_seg.m_off), hex(inject_addr | 1), hex(main_seg.m_off + off))
 
 
     ptr = 0x41617a24
     main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ] 
-    print(hex(ptr-main_seg.m_off),  main_seg.seg_data[ptr - main_seg.m_off-16 :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2:ptr - main_seg.m_off + 10])
 
     
     toc.add_segment_after_main(name, data_to_inject, inject_addr, 2)
 
-    toc.add_segment_after_inject("ABORT", b'\x01\x01\x01\x01', 0x47D00000, 2)
+    # Insert custom prefetch abort
+    custom_prefetch_abort_addr = 0x47D00000
+    prefetch_abort_data = data = open("./prefetch/build/abort.bin","rb").read()
+    print(":".join("{:02x}".format(ord(c)) for c in prefetch_abort_data))
+    toc.add_segment_after_inject("ABORT", prefetch_abort_data, custom_prefetch_abort_addr, 2)
+    main_seg.seg_data = main_seg.seg_data[:0x90] + p32(custom_prefetch_abort_addr) + main_seg.seg_data[0x94:]  # prefetch
+
 
     patched_data = toc.pack_all()
 
     new_version = "DOOMHACK"
     patched_data = patched_data[:2336020] + new_version + patched_data[2336020+len(new_version):]
-    print(patched_data[2336020:2336028], 0x40247d94)
 
 
     open(sys.argv[3], "w").write(patched_data)

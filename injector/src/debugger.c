@@ -217,26 +217,37 @@ void overwrite_handler() {
 
 int task_main() {
     printcrlf();
-    print_hex((char*)0x400100bc, 16);
+    // print_hex((char*)0x400100bc, 16);
     printcrlf();
-    print_hex((char*)0x415983e0, 12*4+4+4);
+    // print_hex((char*)0x415983e0, 12*4+4+4);
     // pal_tasksleep(300000000);
-    overwrite_handler();
+    // overwrite_handler();
+    print_hex(0x47d0006a, 4);
     printcrlf();
-    print_hex((char*)0x400100bc, 16);
+    print_hex(0x47d0006e, 4);
+    // print_hex((char*)0x400100bc, 16);
     printcrlf();
-    print_hex((char*)0x415983e0, 12*4+4+4);
+    // print_hex((char*)0x415983e0, 12*4+4+4);
 
 
     char* command = get_command();
 
     debug_command dc = parse_command(command);
     if (!strcmp(dc.command_type, "REG")) {
-        print_regs();
+        // print_regs();
+        asm("nop");
+        printcrlf();
+        // asm("mrs         r0, spsr");
+        // asm("movw        r1, #0x003a");
+        // asm("movt        r1, #0x47d0");
+        // asm("str         r0, [r1]");
         asm("bkpt");
         asm("nop");
         asm("nop");
-        asm("nop");
+        print_hex(0x47d0006a, 4);
+        printcrlf();
+        print_hex(0x47d0006e, 4);
+        printcrlf();
     } else if (!strcmp(dc.command_type, "MEM")) {
         switch (dc.op) {
         case 'r':
