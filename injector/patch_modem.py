@@ -161,7 +161,7 @@ if __name__ == "__main__":
     pointer_off = main_seg.seg_data.find(p32(main_seg.m_off + off)) + 12
     main_seg.seg_data = main_seg.seg_data[:pointer_off] + p32(inject_addr | 1) + main_seg.seg_data[pointer_off+4:]
 
-
+    # set mpu flag1 to 3
     ptr = 0x41617a24
     main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ] 
 

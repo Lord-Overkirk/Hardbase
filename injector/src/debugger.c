@@ -144,10 +144,6 @@ void print_saved_regs() {
     printlen(buffer, strlen(buffer));
 }
 
-void wrap_regs() {
-    print_regs();
-}
-
 static inline void print_stack() {
     void* sp = get_sp();
     char buffer[50];
@@ -195,7 +191,6 @@ void insert_hw_bpt(uint32_t addr) {
 
 int task_main() {
     // Only load this function pointer table the first time.
-    printlen("HIER", 4);
     if (!init_done) {
         fun_pointer_vector[0] = print_saved_regs;
         memcpy((void*)PRINT_REGS_TABLE, fun_pointer_vector, sizeof(fun_pointer_vector));
@@ -208,11 +203,10 @@ int task_main() {
 
     debug_command dc = parse_command(command);
     if (!strcmp(dc.command_type, "REG")) {
-        print_regs();
         asm("nop");
         printcrlf();
-        // asm("mov r0, r3");
-        asm("bkpt");
+        // asm("mov r0, r2");
+        // asm("bkpt");
         asm("nop");
         asm("nop");
         printcrlf();

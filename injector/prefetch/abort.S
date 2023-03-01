@@ -23,8 +23,6 @@ movw        r1, #0x0066
 movt        r1, #0x47d1
 str         r0, [r1]
 
-@ eor         r2, r2
-@ eor         r3, r3
 mov         r2, #52
 mov         r3, #0x4
 
