@@ -23,8 +23,8 @@ movw        r1, #0x0066
 movt        r1, #0x47d1
 str         r0, [r1]
 
-eor         r2, r2
-eor         r3, r3
+@ eor         r2, r2
+@ eor         r3, r3
 mov         r2, #52
 mov         r3, #0x4
 
@@ -39,26 +39,29 @@ store_regs:
     bne         store_regs
 
 @ sp
+mrs r3, cpsr            @ Switch to user mode, to make sure we can grab the values at the breakpoint.
+mrs r4, spsr
+msr cpsr_c, r4
 mov         r0, sp
 add         r1, #0x4
-str         r1, [r1]
+str         r0, [r1]
 
-@ @ lr
-@ @ cps         #16
-@ @ mov         r0, r0
-@ add         r1, #0x4
-@ str         r1, [r1]
+@ lr
+mov         r0, lr
+add         r1, #0x4
+str         r0, [r1]
+msr cpsr_c, r3          @ Switch back to handler mode, the pc can be grabbed from the current link register.
 
-@ @ pc
-@ mov         r0, lr
-@ sub         r0,#0x4
-@ add         r1, #0x4
-@ str         r1, [r1]
+@ pc
+mov         r0, lr
+sub         r0,#0x4
+add         r1, #0x4
+str         r0, [r1]
 
-@ @ cpsr
-@ mrs         r0, cpsr
-@ add         r1, #0x4
-@ str         r1, [r1]
+@ cpsr
+mrs         r0, spsr
+add         r1, #0x4
+str         r0, [r1]
 
 @ Call to print_regs via the function pointer table.
 movw         r5, 0x0

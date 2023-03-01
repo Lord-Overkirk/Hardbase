@@ -211,7 +211,7 @@ int task_main() {
         print_regs();
         asm("nop");
         printcrlf();
-        asm("mov r0, sp");
+        // asm("mov r0, r3");
         asm("bkpt");
         asm("nop");
         asm("nop");
