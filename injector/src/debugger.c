@@ -7,10 +7,21 @@
 #include <common.h>
 
 #define PREFETCH_ABORT 0x400100bc
+#define PRINT_REGS_TABLE 0x47ca0000
+
 
 const char TASK_NAME[] = "DEBUG\0";
 
 int (*ch_select)(void) = (void*) 0x40aad8d9;
+
+/**
+ * We use this as a function table with pointers to functions
+ * that need to be called from the custom prefetch abort
+ * exception handler.
+ */
+int init_done = 0;
+void (*fun_pointer_vector[1]) (void);
+
 
 
 /* Print len bytes as hexadecimals from specified addr. */
@@ -51,47 +62,11 @@ void dump_byte_range(unsigned int start, unsigned int end) {
     print_hex((char*) start, end-start);
 }
 
-// void debugger_hook() {
-//     static int beenhere = 0;
-
-//     if (beenhere != 2){
-//         char* a = "YOHAY1";
-//         size_t y_len = strlen(a);
-
-//         char buffer[50];
-//         int d = 10, b = 20, c;
-//         c = d + b;
-//         sprintf(buffer, "Sum of %d and %d is %d", d, b, task_count());
-//         printlen(buffer, strlen(buffer));
-
-//         printcrlf();
-//         print_hex(a, 7);
-//         printcrlf();
-
-//         dump_byte_range(0x40669586, 0x4066959f);
-//         printcrlf();
-//         dump_byte_range(0x4066959f, 0x40669586);
-//         printcrlf();
-//         // print_hex(get_pc(), 4);
-//         char buffer2[50];
-//         sprintf(buffer2, "The pc is: %x", get_pc());
-//         printlen(buffer2, strlen(buffer2));
-
-//         char buffer3[50];
-//         sprintf(buffer3, "The r25 is: %x", get_r3());
-//         printlen(buffer3, strlen(buffer3));
-//         printcrlf();
-
-//         beenhere++;
-//     }
-//     return;
-// }
-
 /**
  * @brief Send all the register contents to the gdbserver.
  * 
  */
-static inline void print_regs() {
+inline static volatile void print_regs() {
     char buffer[50];
     sprintf(buffer, "r0: 0x%08x\r\n", get_r0());
     printlen(buffer, strlen(buffer));
@@ -126,6 +101,46 @@ static inline void print_regs() {
     sprintf(buffer, "pc: 0x%08x\r\n", get_pc());
     printlen(buffer, strlen(buffer));
     sprintf(buffer, "cpsr: 0x%08x\r\n", get_cspr());
+    printlen(buffer, strlen(buffer));
+}
+
+void print_saved_regs() {
+    char buffer[50];
+    struct arm_registers* rs = (struct arm_registers*)0x47d10066;
+    
+    sprintf(buffer, "r0: 0x%08x\r\n", rs->r0);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r1: 0x%08x\r\n", rs->r1);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r2: 0x%08x\r\n", rs->r2);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r3: 0x%08x\r\n", rs->r3);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r4: 0x%08x\r\n", rs->r4);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r5: 0x%08x\r\n", rs->r5);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r6: 0x%08x\r\n", rs->r6);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r7: 0x%08x\r\n", rs->r7);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r8: 0x%08x\r\n", rs->r8);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r9: 0x%08x\r\n", rs->r9);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r10: 0x%08x\r\n", rs->r10);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r11: 0x%08x\r\n", rs->r11);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "r12: 0x%08x\r\n", rs->r12);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "sp: 0x%08x\r\n", rs->sp);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "lr: 0x%08x\r\n", rs->lr);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "pc: 0x%08x\r\n", rs->pc);
+    printlen(buffer, strlen(buffer));
+    sprintf(buffer, "cpsr: 0x%08x\r\n", rs->cpsr);
     printlen(buffer, strlen(buffer));
 }
 
@@ -178,75 +193,28 @@ void insert_hw_bpt(uint32_t addr) {
     asm("mcr p14,0,r0,c0,c0, 4");
 }
 
-/**
- * @brief Overwrite the prefetch abort handler. The link register is not decremented by one instr.
- * 
- */
-void overwrite_handler() {
-    /*
-        sub    lr, lr 0x0
-        stmbd  sp!, {lr}
-        nop
-        nop
-        nop
-        nop
-    */
-    char* inject_nop = "\x00\xe0\x4e\xe2\x00\x40\x2d\xe9\x00\x00\x00\x00";
-    // char* inject_branch_handler = "\x00\xe0\x4e\xe2\x00\x40\x2d\xe9\xc5\x20\x56\xeb";
-    // char* inject = "\x00\xe0\x4e\xe2\x1e\xff\x2f\xe1\x00\x00\x00\x00";
-    // char* inject_branch_crlf = "\x00\xe0\x4e\xe2\x00\x40\x2d\xe9\x5f\xe2\x39\xfa";
-    // char* inject = "b\x00\xf0\x5e\xe2";
-    // char* inject_movs = "\x61\xe2\x39\xeb\x00\xf0\x5e\xe2";
-    write_memory(PREFETCH_ABORT, inject_nop, 8);
-    char* arm_v7_nop = "\x00\xf0\x20\xe3";
-
-    // for (int i = 0; i < 2; i++) {
-    //     write_memory(0x4159840c + (i*4), arm_v7_nop, 4);
-    // }
-    // char* blx_crlf = "\x8d\xc1\xe3\xfa";
-    // write_memory(0x4159840c, blx_crlf, 4);
-    // write_memory(0x415983e8, arm_v7_nop, 4);
-    // write_memory(0x415983ec, arm_v7_nop, 4);
-    // memset((void*)0x41598410, 0, 12*4);
-    // char* branch = "\x97\xc1\xe3\xfa";
-    // write_memory(0x415983e4, branch, 4);
-    // branch = "\x95\xc1\xe3\xfa";
-    // write_memory(0x415983ec, branch, 4);
-    return;
-}
-
 int task_main() {
+    // Only load this function pointer table the first time.
+    printlen("HIER", 4);
+    if (!init_done) {
+        fun_pointer_vector[0] = print_saved_regs;
+        memcpy((void*)PRINT_REGS_TABLE, fun_pointer_vector, sizeof(fun_pointer_vector));
+        init_done = 1;
+    }
     printcrlf();
-    // print_hex((char*)0x400100bc, 16);
     printcrlf();
-    // print_hex((char*)0x415983e0, 12*4+4+4);
-    // pal_tasksleep(300000000);
-    // overwrite_handler();
-    print_hex(0x47d0006a, 4);
-    printcrlf();
-    print_hex(0x47d0006e, 4);
-    // print_hex((char*)0x400100bc, 16);
-    printcrlf();
-    // print_hex((char*)0x415983e0, 12*4+4+4);
-
 
     char* command = get_command();
 
     debug_command dc = parse_command(command);
     if (!strcmp(dc.command_type, "REG")) {
-        // print_regs();
+        print_regs();
         asm("nop");
         printcrlf();
-        // asm("mrs         r0, spsr");
-        // asm("movw        r1, #0x003a");
-        // asm("movt        r1, #0x47d0");
-        // asm("str         r0, [r1]");
+        asm("mov r0, sp");
         asm("bkpt");
         asm("nop");
         asm("nop");
-        print_hex(0x47d0006a, 4);
-        printcrlf();
-        print_hex(0x47d0006e, 4);
         printcrlf();
     } else if (!strcmp(dc.command_type, "MEM")) {
         switch (dc.op) {
