@@ -206,10 +206,12 @@ int task_main() {
         asm("nop");
         printcrlf();
         // asm("mov r0, r2");
-        // asm("bkpt");
+        asm("bkpt");
         asm("nop");
         asm("nop");
         printcrlf();
+
+        printlen("HIER", 4);
     } else if (!strcmp(dc.command_type, "MEM")) {
         switch (dc.op) {
         case 'r':

@@ -67,7 +67,30 @@ movt         r5, 0x47ca
 ldr         r5, [r5]
 msr         cpsr_c, #0x33
 blx          r5
+msr         cpsr_c, #0x17
 
+@ TaskWait
+movw         r5, 0xcd6d
+movt         r5, 0x40f0
+msr         cpsr_c, #0x33
+movw         r0, #0x86A0
+movt         r0, #0x0001
+blx          r5
+movw         r0, #0x86A0
+movt         r0, #0x0001
+blx          r5
+movw         r0, #0x86A0
+movt         r0, #0x0001
+blx          r5
+movw         r0, #0x86A0
+movt         r0, #0x0001
+blx          r5
+movw         r0, #0x86A0
+movt         r0, #0x0001
+blx          r5
+movw         r0, #0x86A0
+movt         r0, #0x0001
+blx          r5
 msr         cpsr_c, #0x17
 
 ldmia       sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, pc}^
