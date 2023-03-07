@@ -165,6 +165,24 @@ if __name__ == "__main__":
     ptr = 0x41617a24
     main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ] 
 
+    ptr = 0x41617984
+    main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
+
+    ptr = 0x41617b64
+    main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
+
+    ptr = 0x41617b68
+    main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x00' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
+
+    ptr = 0x41617b90
+    main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x10' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
+
+    ptr = 0x41617bb8
+    main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x10' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
+
+    # ptr = 0x41617a20
+    # main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ] 
+
     
     toc.add_segment_after_main(name, data_to_inject, inject_addr, 2)
 

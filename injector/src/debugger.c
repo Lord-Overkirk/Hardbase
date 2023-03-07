@@ -66,42 +66,49 @@ void dump_byte_range(unsigned int start, unsigned int end) {
  * @brief Send all the register contents to the gdbserver.
  * 
  */
-inline static volatile void print_regs() {
-    char buffer[50];
-    sprintf(buffer, "r0: 0x%08x\r\n", get_r0());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r1: 0x%08x\r\n", get_r1());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r2: 0x%08x\r\n", get_r2());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r3: 0x%08x\r\n", get_r3());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r4: 0x%08x\r\n", get_r4());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r5: 0x%08x\r\n", get_r5());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r6: 0x%08x\r\n", get_r6());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r7: 0x%08x\r\n", get_r7());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r8: 0x%08x\r\n", get_r8());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r9: 0x%08x\r\n", get_r9());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r10: 0x%08x\r\n", get_r10());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r11: 0x%08x\r\n", get_r11());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r12: 0x%08x\r\n", get_r12());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r13: 0x%08x\r\n", get_r13());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "r14: 0x%08x\r\n", get_r14());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "pc: 0x%08x\r\n", get_pc());
-    printlen(buffer, strlen(buffer));
-    sprintf(buffer, "cpsr: 0x%08x\r\n", get_cspr());
-    printlen(buffer, strlen(buffer));
+inline static void store_regs() {
+    asm("stmdb sp!, {r0-r12}");
+
+    asm("movw r1, #0x0066");
+    asm("movt r1, #0x47d1");
+
+    // r0
+    asm("ldr r0, [sp, #0]");
+    asm("str r0, [r1]");
+
+    asm("mov r2, #52 \n\t"
+        "mov r3, #0x4 \n\t"
+
+        // r1 - r12
+        "store_regs:"
+            "ldr r0, [sp, r3] \n\t"
+            "add r1, #0x4 \n\t"
+            "str r0, [r1] \n\t"
+
+            "add r3, #0x4 \n\t"
+            "cmp r2, r3 \n\t"
+            "bne store_regs");
+
+    asm("mov r0, sp");
+    asm("add r0, #52");
+    asm("add r1, #0x4");
+    asm("str r0, [r1]");
+
+    asm("mov r0, lr");
+    asm("add r1, #0x4");
+    asm("str r0, [r1]");
+
+    asm("mov r0, pc");
+    asm("add r1, #0x4");
+    asm("str r0, [r1]");
+
+    asm("mrs r0, cpsr");
+    asm("add r1, #0x4");
+    // We know we are in Thumb, so we set the masked thumb bit manually.
+    asm("orr r0, r0, #0x20");
+    asm("str r0, [r1]");
+
+    asm("ldmia sp!, {r0-r12}");
 }
 
 void print_saved_regs() {
@@ -190,28 +197,34 @@ void insert_hw_bpt(uint32_t addr) {
 }
 
 int task_main() {
+    printcrlf();
     // Only load this function pointer table the first time.
     if (!init_done) {
+        uint32_t a = get_running_task_id();
+        char buff[50];
+        sprintf(buff, "id: %d : 0x%08x\r\n", a, a);
+        printlen(buff, strlen(buff));
         fun_pointer_vector[0] = print_saved_regs;
         memcpy((void*)PRINT_REGS_TABLE, fun_pointer_vector, sizeof(fun_pointer_vector));
         init_done = 1;
     }
-    printcrlf();
-    printcrlf();
 
     char* command = get_command();
 
     debug_command dc = parse_command(command);
     if (!strcmp(dc.command_type, "REG")) {
         asm("nop");
-        printcrlf();
-        // asm("mov r0, r2");
-        asm("bkpt");
+        // asm("mrs r0, cpsr");
+        // asm("and r0, r0, #0x20");
+        // asm("tst r0, #0x20");
+        // asm("mrs r0, spsr");
+        // asm("ldr r1, =0x1f");
+        // asm("and r0, r0, r1"); 
+        store_regs();
+        print_saved_regs();
+        // asm("bkpt");
         asm("nop");
         asm("nop");
-        printcrlf();
-
-        printlen("HIER", 4);
     } else if (!strcmp(dc.command_type, "MEM")) {
         switch (dc.op) {
         case 'r':

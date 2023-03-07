@@ -48,6 +48,7 @@ class ATDebugger:
     def write_memory(self, addr, payload):
         cmd = DebugCommand.DebugCommand(DebugCommand.MEMORY, DebugCommand.WRITE, addr, payload=payload)
         cmd_str = cmd.build()
+        print(cmd_str)
         r = self.send(cmd_str)
         print(r)
         if r[-4:] != 'OK\r\n':
@@ -72,9 +73,8 @@ class ATDebugger:
             old_instr = self.read_memory(addr, 2)
             breakpoint_instr = '01be'       # bkpt 0x1
             print("Inserting bkpt at:" + hex(addr))
-            print(self.read_memory(addr, 8))
+            print("Before: " + self.read_memory(addr, 2))
             self.write_memory(addr, breakpoint_instr)
-            print(self.read_memory(addr, 8))
         elif size == 4:
             # ARM
             pass
@@ -88,3 +88,6 @@ class ATDebugger:
 
 # https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
 
+# AT+DEBUG=MEM|w|0x47c00076|00000000|4|01be
+# AT+DEBUG=MEM|w|0x4061cf20|00000000|4|01be
+# AT+DEBUG=MEM|w|0x4159a3e8|00000000|4|01be

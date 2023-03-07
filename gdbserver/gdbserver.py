@@ -118,10 +118,10 @@ class GdbServer:
                 registers = self.at.get_registers()
                 rs = registers[:-8]
 
-                cprs = registers[-8:]
                 # cprs = "".join(reversed([cprs[i:i+2] for i in range(0, len(cprs), 2)]))
                 if (int(payload_raw, 16) == 25):
-                    self.write_packet("33000060")
+                    cpsr = registers[-8:]
+                    self.write_packet(cpsr)
             case 'P':
                 print("TODO: setting registers")
             case 'Z':

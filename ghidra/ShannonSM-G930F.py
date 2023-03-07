@@ -18,10 +18,13 @@ thumb_functions = {
     "debug_payload": 0x47C00001,
     "pal_tasksleep": 0x40f0cd6d,
     "pal_TaskGetCurrentId": 0x40f0ca35,
+    "DmTraceMsgSendEn2": 0x4060b1ef
 }
 
 arm_functions = {
     "prefetch_abort": 0x400100bc,
+    "get_running_task_id": 0x4159a2b8,
+    "task_suspend": 0x4159a3e4
 }
 
 def rename_functions(functions, TMode):
@@ -39,7 +42,7 @@ def rename_functions(functions, TMode):
         func_entry = toAddr(functions.get(name))
         if TMode:
             created = createFunction(func_entry.previous(), name)
-            print("hier", name)
+            print("hier", name, created)
         else:
             created = createFunction(func_entry, name)
 
