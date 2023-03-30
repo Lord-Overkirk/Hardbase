@@ -1,31 +1,57 @@
-subs         lr, lr,#0x2
+@ Check if running in arm or thumb.
+@ mrs         r0, spsr
+@ and         r0, r0, #32
+@ cmp         r0, #32
+@ beq         thumb_correction
+@ b           arm_correction
 
+@ thumb_correction:
+    sub         lr, lr,#0x0
+@     b           handle_abort
+
+@ arm_correction:
+@     sub         lr, lr,#0x4
+@     b           handle_abort
+
+
+handle_abort:
 stmdb       sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
 
-@ Set cpsr reg values to before BKPT.
-@ msr         cpsr_f, #0x60000000
-@ msr         cpsr_x, #0x00000000
-@ msr         cpsr_c, #0x17
-@ mrs         r0, spsr
-@ msr         cpsr, r0
-
-
 @ Mov crlf into r5.
-movw         r5, 0x8a49
-movt         r5, 0x40e8
-msr         cpsr_c, #0x33
-@ blx          r5
-@ blx          r5
-@ blx          r5
-msr         cpsr_c, #0x17
+@ movw         r5, 0x8a49
+@ movt         r5, 0x40e8
+@ @ msr         cpsr_c, #0x33
+@ cpsid       if
+@ @ blx          r5
+@ @ blx          r5
+@ @ blx          r5
+@ @ msr         cpsr_c, #0x17
 
-@ Saving reg vals to mem.
+@ Restore
+mov         r0, #0x2002
+movw        r1, #0xcf20
+movt        r1, #0x4061
+strh        r0, [r1]
 
+@ Restore dbg msg
+mov         r0, #0xb40f
+movw        r1, #0xb1ee
+movt        r1, #0x4060
+strh        r0, [r1]
+
+@ Restore
+@ mov         r0, #0xb57c
+@ movw        r1, #0x7d00
+@ movt        r1, #0x4068
+@ strh        r0, [r1]
+
+@ @ Saving reg vals to mem.
 @ r0
 ldr         r0, [sp, #0x0]
 movw        r1, #0x0066
 movt        r1, #0x47d1
-@ str         r0, [r1]
+str         r0, [r1]
+
 
 mov         r2, #52
 mov         r3, #0x4
@@ -60,160 +86,138 @@ add         r0,#0x0
 add         r1, #0x4
 str         r0, [r1]
 
+@ mrs         r4, spsr
+@ add         r1, #0x4
+@ str         r4, [r1]
+
+@ Copy spsr cpsr
+@ mrs         r4, cpsr
+@ MRS R0, spsr
+@ @ ORR R0, R0, #0x12
+@ MSR CPSR, R0
+@ cpsid ia
+
+
+@ MSR CPSR_c, R4
+@ bl print_saved_regs
 @ cpsr
-mrs         r0, spsr
 add         r1, #0x4
-str         r0, [r1]
+mov         r4, r1
 
-@ Call to print_regs via the function pointer table.
-movw         r5, 0x0
-movt         r5, 0x47ca
-ldr         r5, [r5]
-msr         cpsr_c, #0x33
-blx          r5
-msr         cpsr_c, #0x17
 
-@ Calling get_running_task_id()
+@ @ Calling get_running_task_id()
 movw        r0, #0xa2b8
 movt        r0, #0x4159
 blx         r0
-mov         r4, r0
 
-@ Calling get_tmu_from_task_id()
-@ movw        r0, #0xa28c
-@ movt        r0, #0x4159
-@ blx         r0
-@ mov         r3, r0
+@ Calling get_current_task_pointer()
+movw        r0, #0xb923
+movt        r0, #0x4061
+blx         r0
 
-bl          kernel_int_lock
-bl          kernel_int_unlock
+cmp         r0, #0x0
+beq         return
 
-@ Call task_suspend
-eor         r2, r2
-mov         r2, #0xa6
-eor         r1, r1
-mov         r1, #0x1
-mov         r0, r4
-movw        r5, #0xa3e4
-movt        r5, #0x4159
-blx         r5
+@ cpsid       i
+@ cpsie       af
+@ cps         #0x13
 
-@ TaskWait
-movw         r5, 0xcd6d
-movt         r5, 0x40f0
-msr         cpsr_c, #0x33
-movw         r0, #0x86A0
-movt         r0, #0x0001
-blx          r5
-movw         r0, #0x86A0
-movt         r0, #0x0001
-blx          r5
-movw         r0, #0x86A0
-movt         r0, #0x0001
-blx          r5
-movw         r0, #0x86A0
-movt         r0, #0x0001
-blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
-@ movw         r0, #0x86A0
-@ movt         r0, #0x0001
-@ blx          r5
+@ cpsie       i, #0x17
+@ add         r1, #0x4
+@ str         r0, [r1]
+@ mov         r4, r0
 
-msr         cpsr_c, #0x17
+@ movw        r0, #0x0EE8
+@ movt        r0, #0x0480
+@ ldr         r0, [r0]
+@ add         r1, #0x4
+@ str         r0, [r1]
 
-ldmia       sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, pc}^
+
+@ @ Calling get_tmu_from_task_id()
+@ @ movw        r0, #0xa28c
+@ @ movt        r0, #0x4159
+@ @ blx         r0
+@ @ mov         r3, r0
+
+@ @ bl          kernel_int_lock
+@ @ bl          kernel_int_unlock
+
+@ AT pointer
+
+@ movw        r0, #0xb238
+@ movt        r0, #0x4161
+@ mrs         r4, spsr
+@ msr         cpsr_cxsf, r4
+
+@ Call task_block !
+movw        r2, #0xb8db
+movt        r2, #0x4061
+@ blx         r2
+
+@ movw        r1, #0x0066
+@ movt        r1, #0x47d1
+
+@ movw        r2, #0x2654
+@ movt        r2, #0x0480
+@ mov         r3, #0x4
+@ mov         r4, #0xa5
+@ mul         r0, r4, r3
+@ add         r0, r0, r2
+@ @ ldr         r0, [r0]
+
+@ str         r0, [r1]
+
+@ movw        r2, #0x8668
+@ movt        r2, #0x4159
+@ mov         r0, #0xa5
+@ bl          r2
+
+@@ Call task_start
+@ movw        r2, #0xb8df
+@ movt        r2, #0x4061
+@ blx         r2
+@ ldmia       sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}^
+
+
+@ @ Call task_suspend
+@ eor         r2, r2
+@ mov         r2, #0x2
+@ eor         r1, r1
+@ mov         r1, #0x1
+@ mov         r0, #0x46
+@ movw        r5, #0xa3e4
+@ movt        r5, #0x4159
+@ bl          r5
+
+
+@ cpsie       if
+@ bl task_wait
+@ bl task_wait
+@ bl task_wait
+@ bl task_wait
+return:
+    ldmia       sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, pc}^
+
+print_saved_regs:
+    @ Call to print_regs via the function pointer table.
+    movw         r5, 0x0
+    movt         r5, 0x47ca
+    ldr          r5, [r5]
+    msr          cpsr_c, #0x33
+    blx          r5
+    msr          cpsr_c, #0x17
+
+task_wait:
+    movw         r5, 0xcd6d
+    movt         r5, 0x40f0
+    msr          cpsr_c, #0x33
+    movw         r0, #0x86A0
+    movt         r0, #0x0001
+    blx          r5
+    msr          cpsr_c, #0x17
+    bx           lr
+
 
 kernel_int_lock:
     mrs     r0, cpsr

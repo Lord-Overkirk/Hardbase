@@ -196,14 +196,38 @@ void insert_hw_bpt(uint32_t addr) {
     asm("mcr p14,0,r0,c0,c0, 4");
 }
 
+void interrupt_enabled() {
+
+}
+
 int task_main() {
+    asm("cpsid if");
     printcrlf();
     // Only load this function pointer table the first time.
     if (!init_done) {
-        uint32_t a = get_running_task_id();
-        char buff[50];
-        sprintf(buff, "id: %d : 0x%08x\r\n", a, a);
-        printlen(buff, strlen(buff));
+        // uint32_t running_task_id = get_running_task_id();
+        uint32_t r2 = os_get_current_task_pointer();
+        uint32_t running_task_id = *(uint32_t*)0x04800ee8;
+        char buff_id[50];
+        sprintf(buff_id, "running task id: 0x%08x\r\n", r2);
+        printlen(buff_id, strlen(buff_id));
+        print_hex(r2, 0x30);
+
+        uint32_t t0 = *(uint32_t*) (0x04802654 + 0x46 * 4);
+        // uint32_t t1 = (uint32_t) os_get_current_task_pointer() + 0x4;
+        uint32_t t1 = *(uint32_t*) (0x04802654 + running_task_id * 4);
+        char buff0[200];
+        char buff1[200];
+        for (int i = 0; i < 0x1; i++) {
+            sprintf(buff0, "next addr: 0x%08x running: 0x%08x id: 0x%08x %s\r\n", t0, *(uint32_t*)(t0+0x34), *(short*)(t0+0x0c), t0+0x5c);
+            sprintf(buff1, "prev addr: 0x%08x running: 0x%08x id: 0x%08x %s\r\n", t1, *(uint32_t*)(t1+0x34), *(short*)(t1+0x0c), t1+0x5c);
+
+            printlen(buff0, strlen(buff0));
+            printlen(buff1, strlen(buff1));
+            t0 = *(uint32_t*)t0;
+            t1 = *(uint32_t*)t1;
+        }
+
         fun_pointer_vector[0] = print_saved_regs;
         memcpy((void*)PRINT_REGS_TABLE, fun_pointer_vector, sizeof(fun_pointer_vector));
         init_done = 1;
@@ -220,7 +244,7 @@ int task_main() {
         // asm("mrs r0, spsr");
         // asm("ldr r1, =0x1f");
         // asm("and r0, r0, r1"); 
-        store_regs();
+        // store_regs();
         print_saved_regs();
         // asm("bkpt");
         asm("nop");
@@ -231,11 +255,14 @@ int task_main() {
             dump_byte_range(dc.memory_start, dc.memory_end);
             break;
         case 'w':
+            asm("cpsid if");
             write_memory(dc.memory_start, dc.payload, dc.payload_size);
+            // dump_byte_range(dc.memory_start, dc.memory_start+2);
             break;
         default:
             break;
         }
     }
+    // asm("cpsie if");
     return 0;
 }

@@ -159,6 +159,7 @@ if __name__ == "__main__":
 
     # find pointer to ledtest function handler
     pointer_off = main_seg.seg_data.find(p32(main_seg.m_off + off)) + 12
+    print(hex(pointer_off))
     main_seg.seg_data = main_seg.seg_data[:pointer_off] + p32(inject_addr | 1) + main_seg.seg_data[pointer_off+4:]
 
     # set mpu flag1 to 3
