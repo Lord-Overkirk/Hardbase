@@ -8,6 +8,7 @@
 
 #define PREFETCH_ABORT 0x400100bc
 #define PRINT_REGS_TABLE 0x47ca0000
+#define HALT_ALL_TASKS 0x47cb0000
 
 
 const char TASK_NAME[] = "DEBUG\0";
@@ -20,8 +21,7 @@ int (*ch_select)(void) = (void*) 0x40aad8d9;
  * exception handler.
  */
 int init_done = 0;
-void (*fun_pointer_vector[1]) (void);
-
+void (*fun_pointer_vector[2]) (void);
 
 
 /* Print len bytes as hexadecimals from specified addr. */
@@ -151,6 +151,41 @@ void print_saved_regs() {
     printlen(buffer, strlen(buffer));
 }
 
+void print_task(task* task) {
+    char buffer[200];
+    sprintf(buffer, "Base: 0x%08x\r\n task_next: 0x%08x\r\n task_id: 0x%08x\r\n name: 0x%08x\r\n name2: %s\r\n", task, task->next_task, task->task_id, &task+0x5c, &task->name);
+    printlen(buffer, strlen(buffer));
+    printcrlf();
+}
+
+void halt_task() {
+
+}
+
+void halt_all_tasks() {
+    task* running_task = (task*)os_get_current_task_pointer();
+    print_task(running_task);
+    // Kernel tasks we can't block.
+    // if (running_task == 0) {
+    //     return;
+    // }
+
+    task* next_task = running_task->next_task;
+    while (next_task->next_task != 0) {
+        if (next_task->task_id == 0xa6) {
+            print_task(next_task);
+        }
+        else {
+            task_block(next_task);
+        }
+        next_task = next_task->next_task;
+    }
+    
+
+    // Finally, we block the running task
+    // task_block(running_task);
+}
+
 static inline void print_stack() {
     void* sp = get_sp();
     char buffer[50];
@@ -206,7 +241,7 @@ int task_main() {
     // Only load this function pointer table the first time.
     if (!init_done) {
         // uint32_t running_task_id = get_running_task_id();
-        uint32_t r2 = os_get_current_task_pointer();
+        task* r2 = (task*)os_get_current_task_pointer();
         uint32_t running_task_id = *(uint32_t*)0x04800ee8;
         char buff_id[50];
         sprintf(buff_id, "running task id: 0x%08x\r\n", r2);
@@ -219,17 +254,22 @@ int task_main() {
         char buff0[200];
         char buff1[200];
         for (int i = 0; i < 0x1; i++) {
-            sprintf(buff0, "next addr: 0x%08x running: 0x%08x id: 0x%08x %s\r\n", t0, *(uint32_t*)(t0+0x34), *(short*)(t0+0x0c), t0+0x5c);
-            sprintf(buff1, "prev addr: 0x%08x running: 0x%08x id: 0x%08x %s\r\n", t1, *(uint32_t*)(t1+0x34), *(short*)(t1+0x0c), t1+0x5c);
+            // print_task(r2);
+            halt_all_tasks();
+            // sprintf(buff0, "next addr: 0x%08x running: 0x%04x id: 0x%08x %s\r\n", r2, (uint16_t)(r2->task_id), *(short*)(t0+0x0c), t0+0x5c);
+            // sprintf(buff1, "prev addr: 0x%08x running: 0x%08x id: 0x%08x %s\r\n", t1, *(uint32_t*)(t1+0x34), *(short*)(t1+0x0c), t1+0x5c);
 
-            printlen(buff0, strlen(buff0));
-            printlen(buff1, strlen(buff1));
-            t0 = *(uint32_t*)t0;
-            t1 = *(uint32_t*)t1;
+            // printlen(buff0, strlen(buff0));
+            // printlen(buff1, strlen(buff1));
+            // t0 = *(uint32_t*)t0;
+            // t1 = *(uint32_t*)t1;
         }
 
         fun_pointer_vector[0] = print_saved_regs;
         memcpy((void*)PRINT_REGS_TABLE, fun_pointer_vector, sizeof(fun_pointer_vector));
+
+        fun_pointer_vector[1] = halt_all_tasks;
+        memcpy((void*)HALT_ALL_TASKS, fun_pointer_vector, sizeof(fun_pointer_vector));
         init_done = 1;
     }
 

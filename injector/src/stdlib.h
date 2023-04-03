@@ -13,6 +13,7 @@
 #define OS_GET_CURRENT_TASK 0x40a21ca9
 #define INTERRUPTS_DISABLE 0x40f011c4
 #define ARMOS_INTERRUPT_CONTROL 0x4061bbaf
+#define TASK_BLOCK 0x4061b8db
 
 #define atoi ((int (*)(char*))ATOI)
 #define pal_tasksleep ((void (*)(uint32_t))PAL_TASK_SLEEP)
@@ -26,15 +27,19 @@
 #define os_get_current_task ((uint32_t(*) (void)) OS_GET_CURRENT_TASK)
 #define interrupts_disable ((uint32_t(*) (void)) INTERRUPTS_DISABLE)
 #define armos_interrupt_control ((uint32_t(*) (uint32_t)) ARMOS_INTERRUPT_CONTROL)
+#define task_block ((uint32_t(*) (task*)) TASK_BLOCK)
 
 
 typedef struct task {
     struct task* next_task;
-    char unknown0[0x8];
-    short task_id;
-    char unknown1[0x3];
+    struct task* prev_task;
+    uint32_t magic;
+    uint16_t task_id;
+    uint16_t task_id_min_1;
+    char unknown1[0xa];
     uint32_t stackbase;
     char unknown2[0x14];
+    char unknown3[0x2a];
     char* name;
     char rest[0xdb];
 } __attribute__((packed)) task;
