@@ -13,13 +13,17 @@
 #define OS_GET_CURRENT_TASK 0x40a21ca9
 #define INTERRUPTS_DISABLE 0x40f011c4
 #define ARMOS_INTERRUPT_CONTROL 0x4061bbaf
-#define TASK_BLOCK 0x4061b8db
+#define TASK_BLOCK 0x41599acc
+#define TASK_START 0x4159a0d8
+#define TASK_DELETE 0x41599c60
+#define SCHEDULE 0x41598668
+#define SET_PRIO_BIT 0x4159cffc
 
 #define atoi ((int (*)(char*))ATOI)
 #define pal_tasksleep ((void (*)(uint32_t))PAL_TASK_SLEEP)
 #define pal_taskgetid ((uint32_t (*)(void))PAL_TASK_GET_ID)
 #define get_running_task_id ((uint32_t (*)(void))GET_RUNNING_TASK_ID)
-#define task_suspend ((void (*) (int, uint32_t, uint32_t)) TASK_SUSPEND)
+#define task_suspend ((void (*) (uint32_t, uint32_t, uint32_t)) TASK_SUSPEND)
 #define os_get_current_task_pointer ((task*(*) (void)) OS_GET_CURRENT_TASK_POINTER)
 #define pal_task_get_current_id ((short(*) (void)) PAL_TASK_GET_CURRENT_ID)
 #define pal_task_get_name ((char(*) (task*)) PAL_TASK_GET_NAME)
@@ -28,6 +32,10 @@
 #define interrupts_disable ((uint32_t(*) (void)) INTERRUPTS_DISABLE)
 #define armos_interrupt_control ((uint32_t(*) (uint32_t)) ARMOS_INTERRUPT_CONTROL)
 #define task_block ((uint32_t(*) (task*)) TASK_BLOCK)
+#define task_start ((uint32_t(*) (task*)) TASK_START)
+#define task_delete ((uint32_t(*) (task*)) TASK_DELETE)
+#define schedule ((void(*) (uint32_t)) SCHEDULE)
+#define set_priority_bit ((void(*) (uint32_t)) SET_PRIO_BIT)
 
 
 typedef struct task {
@@ -37,9 +45,13 @@ typedef struct task {
     uint16_t task_id;
     uint16_t task_id_min_1;
     char unknown1[0xa];
+    uint32_t _stackbase;
+    uint32_t _stack_ptr;
+    char unknown2[0xa];
     uint32_t stackbase;
-    char unknown2[0x14];
-    char unknown3[0x2a];
+    uint32_t stack_ptr;
+    uint32_t is_running;
+    char unknown3[0x24];
     char* name;
     char rest[0xdb];
 } __attribute__((packed)) task;

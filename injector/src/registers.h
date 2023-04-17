@@ -16,6 +16,7 @@ struct arm_registers {
     uint32_t lr;
     uint32_t pc;
     uint32_t cpsr;
+    uint32_t task_ptr;
 } __attribute__((packed));
 
 static __inline__ void * get_pc(void) {

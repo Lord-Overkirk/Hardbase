@@ -6,7 +6,10 @@
 @ b           arm_correction
 
 @ thumb_correction:
-    sub         lr, lr,#0x0
+    @ cpsid   ifa
+    add         lr, lr,#0x1
+    @ movw        lr, #0xb1f2
+    @ movt        lr, #0x4060
 @     b           handle_abort
 
 @ arm_correction:
@@ -36,6 +39,16 @@ strh        r0, [r1]
 @ Restore dbg msg
 mov         r0, #0xb40f
 movw        r1, #0xb1ee
+movt        r1, #0x4060
+strh        r0, [r1]
+
+mov         r0, #0xb088
+movw        r1, #0xb1f4
+movt        r1, #0x4060
+strh        r0, [r1]
+
+mov         r0, #0x4607
+movw        r1, #0xb210
 movt        r1, #0x4060
 strh        r0, [r1]
 
@@ -86,9 +99,9 @@ add         r0,#0x0
 add         r1, #0x4
 str         r0, [r1]
 
-@ mrs         r4, spsr
-@ add         r1, #0x4
-@ str         r4, [r1]
+mrs         r4, spsr
+add         r1, #0x4
+str         r4, [r1]
 
 @ Copy spsr cpsr
 @ mrs         r4, cpsr
@@ -102,7 +115,7 @@ str         r0, [r1]
 @ bl print_saved_regs
 @ cpsr
 add         r1, #0x4
-mov         r4, r1
+mov         r6, r1
 
 
 @ @ Calling get_running_task_id()
@@ -114,9 +127,29 @@ blx         r0
 movw        r0, #0xb923
 movt        r0, #0x4061
 blx         r0
+str         r0, [r6]
 
-cmp         r0, #0x0
-beq         return
+@ add         r6, #0x4
+@ str         r0, [r6]
+
+@ halt_all_tasks() via fun pointer table.
+movw        r1, #0x0
+movt        r1, #0x47cb
+@ add         r1, #0x4
+ldr         r1, [r1]
+@ str         r1, [r6]
+
+movw        r1, #0x0369
+@ movw        r1, #0x00b9
+movt        r1, #0x47c0
+@ Offset for ARM Thumb
+@ add         r1, #0x1
+@ msr          cpsr_c, #0x33
+blx         r1
+@ msr          cpsr_c, #0x17
+
+@ cmp         r0, #0x0
+@ beq         return
 
 @ cpsid       i
 @ cpsie       af
@@ -151,8 +184,8 @@ beq         return
 @ msr         cpsr_cxsf, r4
 
 @ Call task_block !
-movw        r2, #0xb8db
-movt        r2, #0x4061
+@ movw        r2, #0xb8db
+@ movt        r2, #0x4061
 @ blx         r2
 
 @ movw        r1, #0x0066
@@ -197,6 +230,7 @@ movt        r2, #0x4061
 @ bl task_wait
 @ bl task_wait
 return:
+    @ cpsie   ifa
     ldmia       sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, pc}^
 
 print_saved_regs:
