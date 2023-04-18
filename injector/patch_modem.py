@@ -4,6 +4,13 @@
 from struct import unpack, pack
 import zlib
 import sys
+# from dataclasses import dataclass
+
+# @dataclass
+# class mpu_entry:
+#     slot_id: float
+#     base_addr: int
+#     size: int = 0.0
 
 def u32(data):
     return unpack("<I", data[:4])[0]
@@ -137,11 +144,48 @@ class TOC:
                 out+=seg.seg_data
         return out
 
+def show_mpu_regions(main_seg):
+    mpu_base = 0x4161794c
+    mpu_end = 0x41617bf4
+    for mpu_entry_start in range(mpu_base, mpu_end, 40):
+        slot_id = u32(main_seg.seg_data[mpu_entry_start - main_seg.m_off : mpu_entry_start+4 - main_seg.m_off])
+        base_addr = u32(main_seg.seg_data[mpu_entry_start+4 - main_seg.m_off : mpu_entry_start+8 - main_seg.m_off])
+
+        size = u32(main_seg.seg_data[mpu_entry_start+8 - main_seg.m_off : mpu_entry_start+12 - main_seg.m_off])
+        size_bytes = (size >> 1) & 0b11111
+        size_bytes = pow(2, 8+size_bytes-7)
+
+        flags = 0
+        flags |= u32(main_seg.seg_data[mpu_entry_start+12 - main_seg.m_off : mpu_entry_start+16 - main_seg.m_off])
+        flags |= u32(main_seg.seg_data[mpu_entry_start+16 - main_seg.m_off : mpu_entry_start+20 - main_seg.m_off])
+        flags |= u32(main_seg.seg_data[mpu_entry_start+20 - main_seg.m_off : mpu_entry_start+24 - main_seg.m_off])
+        flags |= u32(main_seg.seg_data[mpu_entry_start+24 - main_seg.m_off : mpu_entry_start+28 - main_seg.m_off])
+        flags |= u32(main_seg.seg_data[mpu_entry_start+28 - main_seg.m_off : mpu_entry_start+32 - main_seg.m_off])
+        flags |= u32(main_seg.seg_data[mpu_entry_start+32 - main_seg.m_off : mpu_entry_start+36 - main_seg.m_off])
+        
+        ap_bits = (flags >> 8) & 0b111
+        read = ap_bits != 0 and ap_bits != 4 and ap_bits != 7
+        write = ap_bits == 1 or ap_bits == 2 or ap_bits == 3
+        
+        execr = ((flags >> 12) & 1) == 0
+        
+        perm_str = ["-","-", "-"]
+        if read:
+            perm_str[0] = 'r'
+        if write:
+            perm_str[1] = 'w'
+        if execr:
+            perm_str[2] = 'x'
+
+        print("0x%08x-0x%08x id=0x%x perm=%s" % (base_addr, base_addr + size_bytes, slot_id, ''.join(perm_str)))
+
 
 
 if __name__ == "__main__":
     data = open(sys.argv[2],"rb").read()
     toc = TOC(data)
+    for entry in toc.entries:
+        print(entry.name, entry.b_off, entry.etype)
     main_seg = toc.get_seg_by_name("MAIN")
 
     data_to_inject = open(sys.argv[1],"rb").read()
@@ -162,6 +206,8 @@ if __name__ == "__main__":
     print(hex(pointer_off))
     main_seg.seg_data = main_seg.seg_data[:pointer_off] + p32(inject_addr | 1) + main_seg.seg_data[pointer_off+4:]
 
+    show_mpu_regions(main_seg)
+
     # set mpu flag1 to 3
     ptr = 0x41617a24
     main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ] 
@@ -181,6 +227,7 @@ if __name__ == "__main__":
     ptr = 0x41617bb8
     main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x10' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
 
+    show_mpu_regions(main_seg)
     # ptr = 0x41617a20
     # main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ] 
 

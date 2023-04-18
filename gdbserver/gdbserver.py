@@ -2,9 +2,13 @@ import argparse
 import os
 import sys
 import socket
+import logging
+
 from ATDebugger import ATDebugger
 import xml.etree.ElementTree as XML
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 INTERRUPT_CHAR = '\x03'
 # ARCH_STR = 'l<target version=\"1.0\"><architecture>arm</architecture></target>'
 with open('target.xml', 'r') as file:
@@ -65,7 +69,7 @@ class GdbServer:
             case 'C':
                 self.write_packet('0')
             case _:
-                print(f"Should handle query case {query_cmd}")
+                log.warning(f"unhandled query case {query_cmd}")
 
     def write_packet(self, payload):
         payload = payload.encode()
@@ -111,7 +115,7 @@ class GdbServer:
                 size = int(size, 16)
                 # print("mem", hex(addr), size)
                 raw_bytes = self.at.read_memory(addr, size)
-                print(raw_bytes)
+                log.debug(raw_bytes)
                 self.write_packet(raw_bytes)
             case 'p':
                 print(payload_raw)
@@ -153,7 +157,7 @@ def parse_args():
     args = parser.parse_args()
 
     if not args.port.isnumeric():
-        print("Port must be a num")
+        log.warning("Port must be a num")
         sys.exit(os.EX_DATAERR)
 
     return args.port

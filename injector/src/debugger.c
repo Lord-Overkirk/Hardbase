@@ -305,8 +305,6 @@ void insert_hw_bpt(uint32_t addr) {
 
 int task_main() {
     asm("cpsid ifa");
-    // halt_all_tasks(0x4161f330);
-    // list_tasks();
     printcrlf();
 
     // Only load the function pointer table the first time.
@@ -317,6 +315,7 @@ int task_main() {
         // fun_pointer_vector[1] = halt_all_tasks;
         // memcpy((void*)HALT_ALL_TASKS, fun_pointer_vector[1], sizeof(fun_pointer_vector));
         // init_done = 1;
+        store_regs();
     }
 
     char* command = get_command();
@@ -331,10 +330,7 @@ int task_main() {
             break;
         case 'w':
             asm("cpsid if");
-            print_hex(dc.memory_start, 2);
-            printcrlf();
             write_memory(dc.memory_start, dc.payload, dc.payload_size);
-            print_hex(dc.memory_start, 2);
             printcrlf();
             break;
         default:

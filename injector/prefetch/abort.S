@@ -139,9 +139,9 @@ movt        r1, #0x47cb
 ldr         r1, [r1]
 @ str         r1, [r6]
 
-movw        r1, #0x0369
+@ movw        r1, #0x0369
 @ movw        r1, #0x00b9
-movt        r1, #0x47c0
+@ movt        r1, #0x47c0
 @ Offset for ARM Thumb
 @ add         r1, #0x1
 @ msr          cpsr_c, #0x33

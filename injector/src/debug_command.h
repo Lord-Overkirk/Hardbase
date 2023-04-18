@@ -9,8 +9,8 @@ typedef struct debug_command {
     int argc;
     char* command_type;
     char op;
-    uint32_t memory_start;
-    uint32_t memory_end;
+    uint64_t memory_start;
+    uint64_t memory_end;
     uint32_t payload_size;
     char payload[4];
 } debug_command;
