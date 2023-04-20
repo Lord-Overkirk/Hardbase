@@ -240,10 +240,15 @@ void halt_all_tasks(task* curr_task) {
     // Finally break the current task if non kernel.
     // if (curr_task != 0) {
     // set_priority_bit(0xa6);
-    // char b[4] = {0xa6, 0x00, 0xa0, 0xe3};
+    char b[4] = {0xa6, 0x00, 0xa0, 0xe3};
     // write_memory(0x415997e4, b, 4);
+    // write_memory(0x41598e40, b, 4);
+    // write_memory(0x4159a2f0, b, 4);
+    write_memory(0x40f01170, b, 4);
+    write_memory(0x40f010f8, b, 4);
     // char c[4] = {0x00, 0xbf, 0x00, 0xbf};
     // write_memory(0x414ca21c, c, 4);
+    // write_memory(0x414ca228, c, 4);
     task_block(curr_task);
     // task_start(0x4161b238);
     if (!is_kernel_task(curr_task)) {
