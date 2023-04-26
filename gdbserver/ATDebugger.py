@@ -19,7 +19,7 @@ class ATDebugger:
                                      bytesize=8,
                                      parity=serial.PARITY_NONE,
                                      stopbits=1,
-                                     timeout=1,
+                                     timeout=0.6, # with set remote memory-read-packet-size 0x6000 in gdb
                                      write_timeout=None,
                                      xonxoff=False,
                                      rtscts=False,
@@ -84,9 +84,21 @@ class ATDebugger:
             self.ser.write(cmd.encode())
             data = self.ser.read_until(b'OK\r\n')
             if data:
+                print(len(data), data[-5:-1])
                 return data.decode()
 
 # https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
+# AT+DEBUG=MEM|r|00000000|00004000|0
+# AT+DEBUG=MEM|r|00000000|00004001|0
+# AT+DEBUG=MEM|r|04000000|04000010|0
+# AT+DEBUG=MEM|r|80000000|800000df|0
+# AT+DEBUG=MEM|r|80000000|e0000000|0
+# AT+DEBUG=MEM|r|ffffff00|ffffffdf|0
+# AT+DEBUG=MEM|r|ef000000|ef0000df|0
+# AT+DEBUG=MEM|r|40000000|41000000|0
+# AT+DEBUG=MEM|r|fffffffc|ffffffff|0
+# AT+DEBUG=MEM|r|40080000|40081000|0
+
 
 # AT+DEBUG=MEM|w|0x47c00076|00000000|4|01be
 # AT+DEBUG=MEM|w|0x4061ba58|00000000|4|01be

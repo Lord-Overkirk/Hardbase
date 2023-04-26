@@ -266,6 +266,7 @@ int task_main() {
     if (!init_done) {
         fun_pointer_vector[0] = halt_all_tasks;
         memcpy((void*)HALT_ALL_TASKS, fun_pointer_vector, sizeof(fun_pointer_vector));
+        store_regs();
     }
 
     char* command = get_command();
@@ -280,10 +281,7 @@ int task_main() {
             break;
         case 'w':
             asm("cpsid if");
-            print_hex(dc.memory_start, 2);
-            printcrlf();
             write_memory(dc.memory_start, dc.payload, dc.payload_size);
-            print_hex(dc.memory_start, 2);
             printcrlf();
             break;
         default:

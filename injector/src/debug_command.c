@@ -51,10 +51,10 @@ debug_command parse_command(char* input) {
             d.op = token[0];
             break;
         case START_ADDR:
-            d.memory_start = strtol(token, NULL, 16);
+            d.memory_start = strtoul(token, NULL, 16);
             break;
         case END_ADDR:
-            d.memory_end = strtol(token, NULL, 16);
+            d.memory_end = strtoul(token, NULL, 16);
             break;
         case PAYLOAD_SIZE:
             /* divide by 2 because four chars ascii hex is two bytes */
