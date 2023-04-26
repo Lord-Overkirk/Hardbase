@@ -47,13 +47,17 @@ typedef struct task {
     char unknown1[0xa];
     uint32_t _stackbase;
     uint32_t _stack_ptr;
-    char unknown2[0xa];
-    uint32_t stackbase;
+    char unknown2[0x6];
+    uint32_t stack_top;
+    uint32_t stack_base;
     uint32_t stack_ptr;
     uint32_t is_running;
-    char unknown3[0x24];
+    char unknown3[0x18];
+    uint32_t saved_stack_ptr;
+    char unknown4[0x8];
     char* name;
-    char rest[0xdb];
+    char* other_name;
+    char rest[0xd7];
 } __attribute__((packed)) task;
 
 #endif // _STDLIB_H

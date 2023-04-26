@@ -155,9 +155,9 @@ void print_saved_regs() {
 }
 
 void print_task(task* task) {
-    char buffer[200];
-    sprintf(buffer, " Base: 0x%08x\r\n task_next: 0x%08x\r\n task_id: 0x%08x\r\n task_id-1: 0x%08x\r\n name: %s is_running: %d\r\n stack_ptr: 0x%08x\r\n",
-            task, task->next_task, task->task_id, task->task_id_min_1, &task->name, task->is_running, task->stack_ptr);
+    char buffer[300];
+    sprintf(buffer, " Base: 0x%08x\r\n task_next: 0x%08x\r\n task_id: 0x%08x\r\n task_id-1: 0x%08x\r\n name: %s other_name: %s\r\n is_running: %d\r\n stack_top: 0x%08x\r\n stack_base: 0x%08x\r\n stack_ptr: 0x%08x\r\n",
+            task, task->next_task, task->task_id, task->task_id_min_1, &task->name, &task->other_name, task->is_running, task->stack_top, task->stack_base, task->stack_ptr);
     printlen(buffer, strlen(buffer));
     printcrlf();
 }
@@ -184,44 +184,14 @@ void list_tasks() {
     }
 }
 
-// void halt_all_tasks(task* curr_task) {
-//     // if (is_kernel_task(curr_task->task_id)) {
-//     //     return;
-//     // }
-//     // Pointer to the first task in the tasklist.
-//     task* next_task = (task*)(*(uint32_t*)(TASK_BASE + 0x1 * 4));
-
-//     while (next_task->next_task != 0) {
-//         if (next_task == curr_task) {
-//             next_task = next_task->next_task;
-//             continue;
-//         }
-//         if (next_task->name == 0) {
-//             if (curr_task == 0) {
-//                 return;
-//             }
-//             if (is_kernel_task(curr_task->task_id) || curr_task->task_id == 0xa6) {
-//                 return;
-//             }
-//             task_block(curr_task);
-//             return;
-//         }
-
-//         uint32_t curr_id = next_task->task_id;
-//         if (!is_kernel_task(curr_id) && curr_id != 0xa6) {
-//             // print_task(next_task);
-//             // char buff[100];
-//             // sprintf(buff, "Not stopping task (%x): %s with running: %x\r\n", next_task->task_id, &next_task->name, next_task->is_running);
-//             // printlen(buff, strlen(buff));
-//             task_block(next_task);
-//         }
-//         next_task = next_task->next_task;
-//     }
-// }
+/**
+ * @brief This function should only be called from the custom prefetch abort exception handler.
+ * After the handler saves the register values, this function is called in order to suspend al non-kernel tasks.
+ * One excpetion is the ATI task (id: 0xa6) that is responsible for serial communication.
+ * 
+ * @param curr_task, the task that now contains the bkpt instruction.
+ */
 void halt_all_tasks(task* curr_task) {
-    // if (curr_task == 0) {
-    //     return;
-    // }
     task* next_task = (task*)(*(uint32_t*)(TASK_BASE + 0x1 * 4));
     task* first_task = next_task;
     
@@ -237,30 +207,10 @@ void halt_all_tasks(task* curr_task) {
         next_task = next_task->next_task;
     }
 
-    // Finally break the current task if non kernel.
-    // if (curr_task != 0) {
-    // set_priority_bit(0xa6);
-    char b[4] = {0xa6, 0x00, 0xa0, 0xe3};
-    // write_memory(0x415997e4, b, 4);
-    // write_memory(0x41598e40, b, 4);
-    // write_memory(0x4159a2f0, b, 4);
-    write_memory(0x40f01170, b, 4);
-    write_memory(0x40f010f8, b, 4);
-    // char c[4] = {0x00, 0xbf, 0x00, 0xbf};
-    // write_memory(0x414ca21c, c, 4);
-    // write_memory(0x414ca228, c, 4);
-    task_block(curr_task);
-    // task_start(0x4161b238);
+    // Finally, we block the current task if it was no kernel task.
     if (!is_kernel_task(curr_task)) {
-
-    // Ugly hack to make sure task_suspend ALWAYS schedules the AT handler after this point.
-    // char a[4] = {0x46, 0x20, 0xa0, 0xe3};
-    // char c[4] = {0x42, 0x0e, 0xa0, 0xe3};
-    // write_memory(0x40f01174, b, 4);
-    // write_memory(0x40f011a8, c, 4);
-    //     }
+        task_block(curr_task);
     }
-    // schedule(0x420);
 }
 
 static inline void print_stack() {
