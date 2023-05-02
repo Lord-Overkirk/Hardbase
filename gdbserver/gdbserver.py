@@ -7,8 +7,7 @@ import logging
 from ATDebugger import ATDebugger
 import xml.etree.ElementTree as XML
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log = logging.getLogger('gdbserver')
 INTERRUPT_CHAR = '\x03'
 # ARCH_STR = 'l<target version=\"1.0\"><architecture>arm</architecture></target>'
 with open('target.xml', 'r') as file:
@@ -49,7 +48,7 @@ class GdbServer:
         packet_str = packet
         try:
             (query_cmd, payload) = packet_str.split(':', 1)
-            print(f"Handling {query_cmd} with payload: {payload}")
+            log.info(f"Handling query {query_cmd} with payload: {payload}")
         except ValueError:
             query_cmd = packet_str
         match query_cmd:
@@ -62,7 +61,7 @@ class GdbServer:
             case 'fThreadInfo':
                 self.write_packet('m1')
             case 'sThreadInfo':
-                self.write_packet('1')
+                self.write_packet('l')
             case 'Attached':
                 # Existing proc
                 self.write_packet('1')
@@ -83,7 +82,7 @@ class GdbServer:
     def read_command(self, cmd):
         cmd_type = cmd[0]
         payload_raw = cmd[1:]
-        print(f"Handling {cmd_type} with payload: {payload_raw}")
+        log.info(f"Handling {cmd_type} with payload: {payload_raw}")
         match cmd_type:
             case 'c':
                 self.write_packet('S05')
@@ -103,7 +102,7 @@ class GdbServer:
             case '?':
                 self.write_packet('S00')
             case 'g':
-                print(payload_raw)
+                log.debug(f"case {cmd_type} {payload_raw}")
                 # Registers
                 registers = self.at.get_registers()
                 rs = registers[:-8]
@@ -115,10 +114,9 @@ class GdbServer:
                 size = int(size, 16)
                 # print("mem", hex(addr), size)
                 raw_bytes = self.at.read_memory(addr, size)
-                log.debug(raw_bytes)
+                log.debug(f"case {cmd_type} {len(raw_bytes)}")
                 self.write_packet(raw_bytes)
             case 'p':
-                print(payload_raw)
                 registers = self.at.get_registers()
                 rs = registers[:-8]
 
@@ -128,7 +126,7 @@ class GdbServer:
                     self.write_packet(cpsr)
             case 'P':
                 print("TODO: setting registers")
-            case 'Z':
+            case 'z' | 'Z':
                 b_type, addr, kind = payload_raw.split(',')
                 self.at.insert_breakpoint(addr, kind)
                 self.write_packet('OK')
@@ -157,15 +155,22 @@ def parse_args():
     args = parser.parse_args()
 
     if not args.port.isnumeric():
-        log.warning("Port must be a num")
+        log.error("Port must be a num")
         sys.exit(os.EX_DATAERR)
 
     return args.port
 
 
 def main():
+    log.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s %(asctime)s - (%(filename)s:%(lineno)s) %(message)s', "[%H:%M:%S:%m]")
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
     port_num = parse_args()
     server = GdbServer(port_num)
+    log.info(f"Stared gdbserver on port {port_num}")
 
 
 if __name__ == "__main__":

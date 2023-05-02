@@ -2,6 +2,9 @@ import serial
 import DebugCommand
 import socket
 import sys
+import logging
+
+log = logging.getLogger('gdbserver')
 
 class WriteFailedException(Exception):
     "Memory write failed"
@@ -25,7 +28,7 @@ class ATDebugger:
                                      rtscts=False,
                                      dsrdtr=False)
         except serial.SerialException:
-            print(f"Error: No modem running on port {TTY}")
+            log.error(f"No modem running on port {TTY}")
             exit()
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
@@ -35,8 +38,8 @@ class ATDebugger:
         """Read the register contents through AT commands."""
         cmd = DebugCommand.DebugCommand(DebugCommand.REGISTERS, DebugCommand.READ)
         cmd_str = cmd.build()
-        raw_response = self.send(cmd_str)
-        print(raw_response)
+        raw_response = self.send(cmd_str, True)
+        log.info(raw_response)
         reg_list = raw_response.splitlines()[2:-2]
         register_values = [reg.split(' ')[1].removeprefix('0x') for reg in reg_list]
         # Convert endianess
@@ -48,10 +51,8 @@ class ATDebugger:
     def write_memory(self, addr, payload):
         cmd = DebugCommand.DebugCommand(DebugCommand.MEMORY, DebugCommand.WRITE, addr, payload=payload)
         cmd_str = cmd.build()
-        print(cmd_str)
         r = self.send(cmd_str)
-        print(r)
-        if r[-4:] != 'OK\r\n':
+        if r[-4:] != b'OK\r\n':
             raise WriteFailedException
 
 
@@ -62,33 +63,29 @@ class ATDebugger:
         cmd.memory_end = addr + size
         cmd_str = cmd.build()
         raw_response = self.send(cmd_str)
-        hex_bytes = raw_response.splitlines()[2].split()
-        return ''.join(hex_bytes)
+        (_, response) = raw_response.split(b'\r\n\r\n')
+        (payload, _) = response.split(b'\r\nOK\r\n')
+        return(str(payload.hex()))
 
-    def insert_breakpoint(self, addr, size):
-        size = int(size, base=10)
+    def insert_breakpoint(self, addr, kind):
         addr = int(addr, base=16)
-        if size == 2:
-            # ARM Thumb
-            old_instr = self.read_memory(addr, 2)
-            breakpoint_instr = '01be'       # bkpt 0x1
-            print("Inserting bkpt at:" + hex(addr))
-            print("Before: " + self.read_memory(addr, 2))
-            self.write_memory(addr, breakpoint_instr)
-        elif size == 4:
-            # ARM
-            pass
+        old_instr = self.read_memory(addr, 2)
+        breakpoint_instr = '01be'       # bkpt 0x1
+        log.debug("Inserting bkpt at:" + hex(addr))
+        self.write_memory(addr, breakpoint_instr)
 
-    def send(self, cmd):
+    def send(self, cmd, reg=False):
         while True:
             self.ser.write(cmd.encode())
             data = self.ser.read_until(b'OK\r\n')
             if data:
-                print(len(data), data[-5:-1])
-                return data.decode()
+                if reg:
+                    return data.decode()
+                return data
 
 # https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
 # AT+DEBUG=MEM|r|00000000|00004000|0
+# AT+DEBUG=MEM|r|00000000|00008000|0
 # AT+DEBUG=MEM|r|00000000|00004001|0
 # AT+DEBUG=MEM|r|04000000|04000010|0
 # AT+DEBUG=MEM|r|80000000|800000df|0
