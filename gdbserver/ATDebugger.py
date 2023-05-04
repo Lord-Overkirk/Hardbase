@@ -3,6 +3,7 @@ import DebugCommand
 import socket
 import sys
 import logging
+import datetime
 
 log = logging.getLogger('gdbserver')
 
@@ -22,7 +23,7 @@ class ATDebugger:
                                      bytesize=8,
                                      parity=serial.PARITY_NONE,
                                      stopbits=1,
-                                     timeout=0.6, # with set remote memory-read-packet-size 0x6000 in gdb
+                                     timeout=0.4, # with set remote memory-read-packet-size 0x6000 in gdb
                                      write_timeout=None,
                                      xonxoff=False,
                                      rtscts=False,
@@ -62,9 +63,20 @@ class ATDebugger:
         cmd.memory_start = addr
         cmd.memory_end = addr + size
         cmd_str = cmd.build()
+        s = datetime.datetime.now()
         raw_response = self.send(cmd_str)
-        (_, response) = raw_response.split(b'\r\n\r\n')
-        (payload, _) = response.split(b'\r\nOK\r\n')
+        e = datetime.datetime.now()
+        print(e-s)
+        while (raw_response[-4:] != b'OK\r\n'):
+            self.ser.timeout = 1
+            self.ser.reset_input_buffer()
+            self.ser.reset_output_buffer()
+            print('resend')
+            raw_response = self.send(cmd_str)
+            self.ser.timeout = 0.4
+
+        (head, response) = raw_response.split(b'\r\n\r\n', 1)
+        (payload, _) = response.split(b'\r\nOK\r\n', 1)
         return(str(payload.hex()))
 
     def insert_breakpoint(self, addr, kind):
@@ -75,6 +87,7 @@ class ATDebugger:
         self.write_memory(addr, breakpoint_instr)
 
     def send(self, cmd, reg=False):
+        log.debug(cmd)
         while True:
             self.ser.write(cmd.encode())
             data = self.ser.read_until(b'OK\r\n')

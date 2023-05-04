@@ -43,7 +43,6 @@ class GdbServer:
 
         if checksum != calc_checksum:
             raise RuntimeError("Wrong checksum!")
-
     def handle_query_packet(self, packet):
         packet_str = packet
         try:
@@ -53,7 +52,7 @@ class GdbServer:
             query_cmd = packet_str
         match query_cmd:
             case 'Supported':
-                self.write_packet('PacketSize=8000;qXfer:features:read+')
+                self.write_packet('PacketSize=18000;qXfer:features:read+')
             case 'Xfer':
                 self.write_packet(ARCH_STR)
             case 'TStatus':
@@ -84,6 +83,9 @@ class GdbServer:
         payload_raw = cmd[1:]
         log.info(f"Handling {cmd_type} with payload: {payload_raw}")
         match cmd_type:
+            case 'D':
+                self.write_packet('OK')
+                sys.exit(os.EX_OK)
             case 'c':
                 self.write_packet('S05')
                 # registers = self.at.get_registers()
@@ -112,9 +114,9 @@ class GdbServer:
                 addr, size = payload_raw.split(',')
                 addr = int(addr, 16)
                 size = int(size, 16)
+                log.debug(f"case {cmd_type} {hex(addr)} {hex(size)}")
                 # print("mem", hex(addr), size)
                 raw_bytes = self.at.read_memory(addr, size)
-                log.debug(f"case {cmd_type} {len(raw_bytes)}")
                 self.write_packet(raw_bytes)
             case 'p':
                 registers = self.at.get_registers()

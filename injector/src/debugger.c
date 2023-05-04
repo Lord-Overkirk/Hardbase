@@ -50,22 +50,22 @@ static inline void write_memory(unsigned int start, char *payload, unsigned int 
 }
 
 /* Dump the bytes as hex in the specified range. */
-void dump_byte_range(unsigned int start, unsigned int end)
-{
+void dump_byte_range(unsigned int start, unsigned int end) {
     if (start > end)
     {
         char *err_str = "Error, wrong range\n";
         printlen(err_str, strlen(err_str));
         return;
     }
-    // ASSERT(start > end);
-    int stride = 16;
-    int remaining_bytes = end-start % 16;
-    for (int i = 0; i < end-start; i+=stride) {
-        printlen(start+i, stride);
+    int length = end - start;
+    int stride = 0x3999;
+    int remaining_bytes = (end-start) % stride;
+    if (length > end-start-stride) {
+        for (int i = 0; i <= end-start-stride; i+=stride) {
+            printlen(start+i, stride);
+        }
     }
     printlen(end - remaining_bytes, remaining_bytes);
-    // print_hex((char *)start, end - start);
 }
 
 /**
