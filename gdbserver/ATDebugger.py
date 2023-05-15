@@ -4,6 +4,7 @@ import socket
 import sys
 import logging
 import datetime
+import time
 
 log = logging.getLogger('gdbserver')
 
@@ -31,6 +32,8 @@ class ATDebugger:
         except serial.SerialException:
             log.error(f"No modem running on port {TTY}")
             exit()
+        # self.ser.cancel_read()
+        # self.ser.cancel_write()
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
 
@@ -66,17 +69,24 @@ class ATDebugger:
         s = datetime.datetime.now()
         raw_response = self.send(cmd_str)
         e = datetime.datetime.now()
-        print(e-s)
-        while (raw_response[-4:] != b'OK\r\n'):
-            self.ser.timeout = 1
+        print(e-s, self.ser.in_waiting, len(raw_response))
+        while (raw_response[-4:] != b'OK\r\n' or raw_response[34:38] != b'\r\n\r\n'):
+            time.sleep(0.2)
+            print('resend', self.ser.in_waiting)
+            self.ser.read_all()
+            self.ser.flush()
             self.ser.reset_input_buffer()
             self.ser.reset_output_buffer()
-            print('resend')
+            # self.ser.timeout = 2
             raw_response = self.send(cmd_str)
-            self.ser.timeout = 0.4
+            print(raw_response[0:50], raw_response[-4:], self.ser.in_waiting)
 
-        (head, response) = raw_response.split(b'\r\n\r\n', 1)
-        (payload, _) = response.split(b'\r\nOK\r\n', 1)
+        self.ser.timeout = 0.4
+
+        (_, response) = raw_response.split(b'\r\n\r\n', 1)
+        payload_parts = response.split(b'\r\nOK\r\n')
+        print(len(response), len(payload_parts))
+        payload = b''.join(payload_parts[:-1])
         return(str(payload.hex()))
 
     def insert_breakpoint(self, addr, kind):
@@ -90,10 +100,12 @@ class ATDebugger:
         log.debug(cmd)
         while True:
             self.ser.write(cmd.encode())
-            data = self.ser.read_until(b'OK\r\n')
+            data = self.ser.read_until(expected=b'OK\r\n')
             if data:
                 if reg:
                     return data.decode()
+                while self.ser.in_waiting != 0:
+                    data += self.ser.read_until(expected=b'OK\r\n')
                 return data
 
 # https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
@@ -108,8 +120,10 @@ class ATDebugger:
 # AT+DEBUG=MEM|r|40000000|41000000|0
 # AT+DEBUG=MEM|r|fffffffc|ffffffff|0
 # AT+DEBUG=MEM|r|40080000|40081000|0
+# AT+DEBUG=MEM|r|47428000|47428010|0
 
 
+# AT+DEBUG=MEM|w|0x40620aec|00000000|4|01be
 # AT+DEBUG=MEM|w|0x47c00076|00000000|4|01be
 # AT+DEBUG=MEM|w|0x4061ba58|00000000|4|01be
 # AT+DEBUG=MEM|w|0x4159a3e8|00000000|4|01be
