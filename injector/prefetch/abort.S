@@ -1,5 +1,5 @@
 @ Correction for thumb.
-add         lr, lr,#0x1
+sub         lr, lr,#0x4
 
 handle_abort:
 stmdb       sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
@@ -41,7 +41,6 @@ msr         cpsr_c, r3          @ Switch back to handler mode, the pc can be gra
 
 @ pc
 mov         r0, lr
-sub         r0,#0x4
 add         r1, #0x4
 str         r0, [r1]
 
@@ -65,11 +64,27 @@ movt        r0, #0x4061
 blx         r0
 str         r0, [r6]
 
+mrs         r11, cpsr
+mrs         r12, spsr
+msr         cpsr_c, r12
+
 @ halt_all_tasks() via fun pointer table.
 movw        r1, #0x0
 movt        r1, #0x47cb
 ldr         r1, [r1]
+
+@ movw        r1, #0x0369
+@ movw        r1, #0x03a5
+@ movt        r1, #0x47c0
 blx         r1
+
+@ Back to kernel stack
+msr         cpsr_c, r11
+@ reset thumb
+orr         r11, r11, #0x20
+msr         spsr_cxsf, r11
+@ Register corrections
+sub         sp, #0x38 
 
 @ This point should not get reached, since halt_all_tasks() calls the scheduler.
 return:
