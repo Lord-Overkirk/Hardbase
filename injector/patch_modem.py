@@ -215,6 +215,9 @@ if __name__ == "__main__":
     ptr = 0x41617984
     main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
 
+    ptr = 0x41617ac8
+    main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x00' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
+
     ptr = 0x41617b64
     main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
 
@@ -227,6 +230,7 @@ if __name__ == "__main__":
     ptr = 0x41617bb8
     main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x10' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ]
 
+    print('\n')
     show_mpu_regions(main_seg)
     # ptr = 0x41617a20
     # main_seg.seg_data = main_seg.seg_data[ :ptr - main_seg.m_off + 1] + b'\x03' +  main_seg.seg_data[ ptr - main_seg.m_off + 2: ] 

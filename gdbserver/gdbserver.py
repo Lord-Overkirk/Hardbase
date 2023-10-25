@@ -3,6 +3,7 @@ import os
 import sys
 import socket
 import logging
+import time
 
 from ATDebugger import ATDebugger
 import xml.etree.ElementTree as XML
@@ -52,7 +53,7 @@ class GdbServer:
             query_cmd = packet_str
         match query_cmd:
             case 'Supported':
-                self.write_packet('PacketSize=18000;qXfer:features:read+')
+                self.write_packet('PacketSize=200000;qXfer:features:read+')
             case 'Xfer':
                 self.write_packet(ARCH_STR)
             case 'TStatus':
@@ -131,8 +132,12 @@ class GdbServer:
             case 'z' | 'Z':
                 b_type, addr, kind = payload_raw.split(',')
                 self.at.insert_breakpoint(addr, kind)
-                self.write_packet('OK')
-                # b* 0x47c001ce
+                self.write_packet("OK")
+                
+                # Used for reaching the bkpt, could be done better through singalling from the custom
+                # prefetch abort handler. But since we can't really 'halt' the bp, successive memory dumps
+                # are also influenced by the still running bp.
+                time.sleep(1)
             case _:
                 print("Should handle case {0}".format(cmd_type), payload_raw)
 

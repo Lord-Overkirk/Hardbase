@@ -24,7 +24,7 @@ class ATDebugger:
                                      bytesize=8,
                                      parity=serial.PARITY_NONE,
                                      stopbits=1,
-                                     timeout=0.4, # with set remote memory-read-packet-size 0x6000 in gdb
+                                     timeout=0.8, # with set remote memory-read-packet-size 0x6000 in gdb
                                      write_timeout=None,
                                      xonxoff=False,
                                      rtscts=False,
@@ -71,7 +71,7 @@ class ATDebugger:
         e = datetime.datetime.now()
         print(e-s, self.ser.in_waiting, len(raw_response))
         while (raw_response[-4:] != b'OK\r\n' or raw_response[34:38] != b'\r\n\r\n'):
-            time.sleep(0.2)
+            time.sleep(1.0)
             print('resend', self.ser.in_waiting)
             self.ser.read_all()
             self.ser.flush()
@@ -107,62 +107,3 @@ class ATDebugger:
                 while self.ser.in_waiting != 0:
                     data += self.ser.read_until(expected=b'OK\r\n')
                 return data
-
-# https://ttotem.com/wp-content/uploads/wpforo/attachments/113/88-DIAGNOTICO-POR-COMANDOS.pdf
-# AT+DEBUG=MEM|r|00000000|00004000|0
-# AT+DEBUG=MEM|r|00000000|00008000|0
-# AT+DEBUG=MEM|r|00000000|00004001|0
-# AT+DEBUG=MEM|r|04000000|04000010|0
-# AT+DEBUG=MEM|r|80000000|800000df|0
-# AT+DEBUG=MEM|r|80000000|e0000000|0
-# AT+DEBUG=MEM|r|ffffff00|ffffffdf|0
-# AT+DEBUG=MEM|r|ef000000|ef0000df|0
-# AT+DEBUG=MEM|r|40000000|41000000|0
-# AT+DEBUG=MEM|r|fffffffc|ffffffff|0
-# AT+DEBUG=MEM|r|40080000|40081000|0
-# AT+DEBUG=MEM|r|47428000|47428010|0
-
-
-# AT+DEBUG=MEM|w|0x40620aec|00000000|4|01be
-# AT+DEBUG=MEM|w|0x47c00076|00000000|4|01be
-# AT+DEBUG=MEM|w|0x4061ba58|00000000|4|01be
-# AT+DEBUG=MEM|w|0x4159a3e8|00000000|4|01be
-# AT+DEBUG=MEM|w|0x4061cf20|00000000|4|01be
-# AT+DEBUG=MEM|w|0x4061c7c0|00000000|4|01be
-
-# AT+DEBUG=MEM|w|0x40687d00|00000000|4|01be
-# AT+DEBUG=MEM|w|0x40f40b56|00000000|4|01be
-# AT+DEBUG=MEM|w|0x40f40b57|00000000|4|01be
-
-# AT+DEBUG=MEM|w|4060b1f4|00000000|4|01be  AT+DEBUG=MEM|w|4060b210|00000000|4|01be
-# AT+DEBUG=MEM|w|4060b1ee|00000000|4|01be
-# AT+DEBUG=MEM|w|40620b40|00000000|4|01be
-# AT+DEBUG=MEM|w|414c221c|00000000|4|01be
-# AT+DEBUG=MEM|w|40f2a41a|00000000|4|01be
-# AT+DEBUG=MEM|r|4060b1ee|4060b1ef
-# AT+DEBUG=MEM|r|4060b1f2|4060b1fa
-# AT+DEBUG=MEM|w|40620aec|00000000|4|01be
-
-# AT+DEBUG=MEM|w|0x4060b1ee|00000000|4|01be
-# AT+DEBUG=MEM|r|0x4161b1b0|0x4161B2B8
-# AT+DEBUG=MEM|r|0x4161b238|0x4161B340
-# AT+DEBUG=MEM|r|0x4161a3c8|0x4161a4c8
-# AT+DEBUG=MEM|r|0x4161b868|0x4161b898
-# AT+DEBUG=MEM|w|0x4159a3e4|00000000|16|800008f1700020e1
-# AT+DEBUG=MEM|w|0x4159a3e4|00000000|4|01be
-# AT+DEBUG=MEM|w|0x4159a3e4|00000000|8|700020e1
-
-# AT+DEBUG=MEM|w|0x41599b2c|00000000|4|01be
-# AT+DEBUG=MEM|w|0x415988b8|00000000|4|01be
-# AT+DEBUG=MEM|w|0x415988ba|00000000|4|01be
-# AT+DEBUG=MEM|w|0x40f0dba4|00000000|4|01be
-
-# AT+DEBUG=MEM|w|40f0cd6e|00000000|4|01be
-
-# AT+DEBUG=MEM|w|0x41599ae4 |00000000|4|01be
-
-
-# AT+DEBUG=MEM|w|0x41598d14|00000000|8|700020e1
-# AT+DEBUG=MEM|w|0x4159a0dc|00000000|4|01be
-
-# AT+DEBUG=MEM|w|0x40aad8dc|00000000|4|01be

@@ -105,7 +105,7 @@ static __inline__ void * get_r12(void) {
 
 static __inline__ void * get_r13(void) {
     void *pc;
-    asm("mov %0, r13" : "=r"(pc));
+    asm("mov %0, pc" : "=r"(pc));
     return pc;
 }
 

@@ -7,8 +7,8 @@ stmdb       sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
 @ @ Saving reg vals to mem.
 @ r0
 ldr         r0, [sp, #0x0]
-movw        r1, #0x0066
-movt        r1, #0x47d1
+movw        r1, #0x0166
+movt        r1, #0x47d0
 str         r0, [r1]
 
 
@@ -80,8 +80,8 @@ blx         r1
 
 @ Back to kernel stack
 msr         cpsr_c, r11
-@ reset thumb
-orr         r11, r11, #0x20
+@ reset thumb/usr mode - load cpsr from saved regs
+ldr         r11, [pc, #0xe2]
 msr         spsr_cxsf, r11
 @ Register corrections
 sub         sp, #0x38 

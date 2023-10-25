@@ -45,8 +45,8 @@ typedef struct task {
     uint16_t task_id;
     uint16_t task_id_min_1;
     char unknown1[0xa];
-    uint32_t _stackbase;
-    uint32_t _stack_ptr;
+    uint32_t unknown_int0;
+    uint32_t unknown_int1;
     char unknown2[0x6];
     uint32_t stack_top;
     uint32_t stack_base;
