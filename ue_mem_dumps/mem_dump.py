@@ -151,7 +151,6 @@ def main():
     reg_dict = parse_registers(registers.strip())
     print('continue...', end='', flush=True)
     while reg_dict.get('pc') != bkpt:
-        print(reg_dict.get('pc'))
         time.sleep(0.4)
         registers = get_registers()
         print('.',end='', flush=True)
